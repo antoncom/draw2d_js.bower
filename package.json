@@ -1,6 +1,6 @@
 {
   "name": "draw2d",
-  "version": "6.1.7",
+  "version": "6.1.8",
   "main": [
     "dist/jquery.autoresize.js",
     "dist/jquery-touch_punch.js",
@@ -12,6 +12,7 @@
     "dist/json2.js",
     "dist/pathfinding-browser.min.js",
     "dist/StackBlur.js",
+    "dist/shifty.js",
     "dist/draw2d.js"
   ],
   "author" : "Andreas Herz",

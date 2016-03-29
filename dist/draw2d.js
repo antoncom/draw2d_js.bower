@@ -19520,7 +19520,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.4",
+    version : "6.1.7",
     i18n : {
         command : {
             move : "Move Shape",
@@ -30634,7 +30634,7 @@ draw2d.shape.basic.Diamond = draw2d.shape.basic.Polygon.extend({
  * @extends draw2d.shape.basic.Rectangle
  * @since 4.7.2
  */
-draw2d.shape.composite.Composite = draw2d.shape.basic.Rectangle.extend({
+draw2d.shape.composite.Composite = draw2d.SetFigure.extend({
     NAME : "draw2d.shape.composite.Composite",
 
     /**
@@ -30645,7 +30645,7 @@ draw2d.shape.composite.Composite = draw2d.shape.basic.Rectangle.extend({
     */
     init: function( attr, setter, getter) 
     {
-      this._super(attr, setter, getter);
+      this._super($.extend({stroke:1,"color": "#f0f0f0"},attr), setter, getter);
     },
     
     /**
@@ -30706,7 +30706,17 @@ draw2d.shape.composite.Composite = draw2d.shape.basic.Rectangle.extend({
         if(canvas!==null){
             this.toBack();
         }
-    }
+    },
+
+
+    /**
+     * @inheritdoc
+     */
+    getTopLevelShapeElement: function()
+    {
+        return this.shape;
+    },
+
 
 });
 
@@ -32173,8 +32183,6 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
             draw2d.Connection.DROP_FILTER.element.setAttribute("height", "250%");
             draw2d.Connection.DROP_FILTER.createShadow(1,1,2, 0.3);
         }
-        this.shape.items[0].filter(draw2d.Connection.DROP_FILTER);
-
 
         if(this.sourceDecoratorNode!==null){
            this.sourceDecoratorNode.remove();
@@ -32199,6 +32207,8 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
            }
        }
        else{
+           this.shape.items[0].filter(draw2d.Connection.DROP_FILTER);
+
            if(this.sourcePort!==null){
                this.sourcePort.on("move",this.moveListener);
                this.canvas.fireEvent("connect", {"port":this.sourcePort, "connection":this});
