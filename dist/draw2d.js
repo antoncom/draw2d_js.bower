@@ -19520,7 +19520,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.7",
+    version : "6.1.9",
     i18n : {
         command : {
             move : "Move Shape",
@@ -22632,7 +22632,7 @@ draw2d.Figure = Class.extend({
      * @method
      * Get the top level shape element. May the figure has a set of SVG elements. In this case this
      * method must return the top level node.<br>
-     * This method is used for the toFron/toBack method to order the nodes in the correct way.
+     * This method is used for the toFront/toBack method to order the nodes in the correct way.
      * 
      * @since 5.0.0
      * @private
@@ -25985,6 +25985,9 @@ draw2d.SetFigure = draw2d.shape.basic.Rectangle.extend({
      */
     getTopLevelShapeElement: function()
     {
+        if(this.svgNodes.length===0) {
+            return this.shape;
+        }
         return this.svgNodes;
     },
     
@@ -30706,17 +30709,7 @@ draw2d.shape.composite.Composite = draw2d.SetFigure.extend({
         if(canvas!==null){
             this.toBack();
         }
-    },
-
-
-    /**
-     * @inheritdoc
-     */
-    getTopLevelShapeElement: function()
-    {
-        return this.shape;
-    },
-
+    }
 
 });
 
@@ -31290,7 +31283,8 @@ draw2d.shape.composite.WeakComposite = draw2d.shape.composite.Composite.extend({
      * 
      * @param {Object} [attr] the configuration of the shape
      */
-    init: function( attr, setter, getter) {
+    init: function( attr, setter, getter)
+    {
        this._super(attr, setter, getter);
     }
 });
