@@ -15783,6 +15783,13 @@ draw2d.policy.connection.OrthogonalConnectionCreatePolicy = draw2d.policy.connec
 
             canvas.paper.setStart();
 
+            // delete the previews puls if the user press twice on the starting port
+            //
+            if(this.pulse!==null) {
+                this.pulse.remove();
+                this.pulse = null;
+            }
+
             var pos = port.getAbsolutePosition();
             this.ripple(pos.x, pos.y, 1);
             this.pulse = canvas.paper.setFinish();
@@ -29707,18 +29714,24 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
      */
     repaint: function(attributes)
     {
-      if(this.repaintBlocked===true || this.shape===null){
+        if(this.repaintBlocked===true || this.shape===null){
           return;
-      }
+        }
 
-      if(this.svgPathString===null || this.routingRequired===true){
+        if(this.svgPathString===null || this.routingRequired===true){
           this.calculatePath();
-      }
- 
-     
-      this._super( $.extend( {path:this.svgPathString,"stroke-linecap":"round", "stroke-linejoin":"round"}, attributes));
-      
-      return this;
+        }
+
+        if (typeof attributes !== "undefined") {
+            attributes = {};
+        }
+        attributes.path=this.svgPathString;
+        attributes["stroke-linecap"]="round";
+        attributes["stroke-linejoin"]="round";
+
+        this._super( attributes);
+
+        return this;
     },
     
 
