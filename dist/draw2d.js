@@ -19527,7 +19527,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.10",
+    version : "6.1.11",
     i18n : {
         command : {
             move : "Move Shape",
@@ -29722,7 +29722,7 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
           this.calculatePath();
         }
 
-        if (typeof attributes !== "undefined") {
+        if (typeof attributes === "undefined") {
             attributes = {};
         }
         attributes.path=this.svgPathString;
