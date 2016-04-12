@@ -19527,7 +19527,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.11",
+    version : "6.1.12",
     i18n : {
         command : {
             move : "Move Shape",
@@ -28699,6 +28699,11 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
        this.vertices.each(function(i,e){
            e.translate(dx, dy);
        });
+
+       // update start/end if the first or last vertex has been changed
+       //
+       this.start=this.vertices.first().clone();
+       this.end=this.vertices.last().clone();
 
        var _this = this;
        this.editPolicy.each(function(i,e){
