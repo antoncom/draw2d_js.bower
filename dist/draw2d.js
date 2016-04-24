@@ -11289,7 +11289,8 @@ draw2d.policy.canvas.WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend({
      * @param zoomFactor
      * @param animated
      */
-    setZoom: function( zoomFactor, animated){
+    setZoom: function( zoomFactor, animated)
+    {
 
         // determine the center of the current canvas. We try to keep the
         // current center during zoom operation
@@ -11306,20 +11307,20 @@ draw2d.policy.canvas.WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend({
             var myTweenable = new Tweenable();
             myTweenable.tween({
                 from:     { 'x': this.canvas.zoomFactor  },
-            to:       { 'x': zoomFactor },
-            duration: 300,
-            easing : "easeOutSine",
-            step: function (params) {
-                _this._zoom(params.x, centerX, centerY);
-            },
-            finish: function (state) {
-                _this.debouncedZoomedCallback();
-            }
-        });
-    }
-    else{
-        this._zoom(zoomFactor, {x:centerX, y:centerY});
-        this.debouncedZoomedCallback();
+                to:       { 'x': zoomFactor },
+                duration: 300,
+                easing : "easeOutSine",
+                step: function (params) {
+                    _this._zoom(params.x, centerX, centerY);
+                },
+                finish: function (state) {
+                    _this.debouncedZoomedCallback();
+                }
+            });
+        }
+        else{
+            this._zoom(zoomFactor, {x:centerX, y:centerY});
+            this.debouncedZoomedCallback();
         }
     },
 
@@ -19529,7 +19530,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.13",
+    version : "6.1.14",
     i18n : {
         command : {
             move : "Move Shape",
@@ -21185,7 +21186,14 @@ draw2d.Canvas = Class.extend(
         //
         var figure = this.getBestFigure(x, y);
 
-        this.fireEvent("click", {figure:figure, x:x, y:y, shiftKey:shiftKey, ctrlKey:ctrlKey});
+        this.fireEvent("click", {
+            figure:figure,
+            x:x,
+            y:y,
+            relX: figure.getAbsoluteX()-x,
+            relY: figure.getAbsoluteY()-y,
+            shiftKey:shiftKey,
+            ctrlKey:ctrlKey});
 
         // forward the event to all install policies as well.
         // (since 3.0.0)
