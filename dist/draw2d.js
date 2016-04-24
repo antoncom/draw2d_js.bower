@@ -11903,7 +11903,15 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
     onClick: function(figure, mouseX, mouseY, shiftKey, ctrlKey)
     {
         if(figure!==null){
-            figure.fireEvent("click", {x:mouseX, y:mouseY, shiftKey:shiftKey, ctrlKey:ctrlKey});
+            figure.fireEvent("click", {
+                figure:figure,
+                x:mouseX,
+                y:mouseY,
+                relX: figure.getAbsoluteX()-mouseX,
+                relY: figure.getAbsoluteY()-mouseY,
+                shiftKey:shiftKey,
+                ctrlKey:ctrlKey});
+
             figure.onClick();
         }
     },
@@ -19530,7 +19538,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.14",
+    version : "6.1.15",
     i18n : {
         command : {
             move : "Move Shape",
