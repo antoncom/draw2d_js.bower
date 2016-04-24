@@ -11907,8 +11907,8 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
                 figure:figure,
                 x:mouseX,
                 y:mouseY,
-                relX: figure.getAbsoluteX()-mouseX,
-                relY: figure.getAbsoluteY()-mouseY,
+                relX: mouseX-figure.getAbsoluteX(),
+                relY: mouseY-figure.getAbsoluteY(),
                 shiftKey:shiftKey,
                 ctrlKey:ctrlKey});
 
@@ -19538,7 +19538,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.15",
+    version : "6.1.16",
     i18n : {
         command : {
             move : "Move Shape",
@@ -21198,8 +21198,8 @@ draw2d.Canvas = Class.extend(
             figure:figure,
             x:x,
             y:y,
-            relX: figure.getAbsoluteX()-x,
-            relY: figure.getAbsoluteY()-y,
+            relX: x-figure.getAbsoluteX(),
+            relY: y-figure.getAbsoluteY(),
             shiftKey:shiftKey,
             ctrlKey:ctrlKey});
 
@@ -23136,7 +23136,7 @@ draw2d.Figure = Class.extend({
      * Called when a user clicks on the element.
      * 
      *      // You can alternatively register an event handler with:
-     *      figure.on("click", function(emitter){
+     *      figure.on("click", function(emitter, event){
      *          alert("user click on the figure");
      *      });
      * 
@@ -23154,7 +23154,7 @@ draw2d.Figure = Class.extend({
      * right click with the mouse.
      * 
      *      // Alternatively you register for this event with:
-     *      figure.on("contextmenu", function(emitter){
+     *      figure.on("contextmenu", function(emitter, event){
      *          alert("user press the right mouse button for a context menu");
      *      });
      * 
