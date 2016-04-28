@@ -19551,7 +19551,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.20",
+    version : "6.1.21",
     i18n : {
         command : {
             move : "Move Shape",
@@ -19819,9 +19819,9 @@ draw2d.Canvas = Class.extend(
 
         this.html.bind("mousemove touchmove", function(event)
         {
-            event = _this._getEvent(event);
+            event  = _this._getEvent(event);
+            var pos = _this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY);
             if (_this.mouseDown === false){
-               var pos = _this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY);
                // mouseEnter/mouseLeave events for Figures. Don't use the Raphael or DOM native functions.
                // Raphael didn't work for Rectangle with transparent fill (events only fired for the border line)
                // DOM didn't work well for lines. No eclipse area - you must hit the line exact to retrieve the event.
@@ -19860,6 +19860,7 @@ draw2d.Canvas = Class.extend(
                });
                _this.mouseDragDiffX = diffXAbs;
                _this.mouseDragDiffY = diffYAbs;
+               _this.fireEvent("mousemove",{x:pos.x, y:pos.y, shiftKey:event.shiftKey, ctrlKey:event.ctrlKey, hoverFigure:_this.currentHoverFigure});
            }
         });
         
