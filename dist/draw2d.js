@@ -19551,7 +19551,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.18",
+    version : "6.1.19",
     i18n : {
         command : {
             move : "Move Shape",
@@ -19831,12 +19831,14 @@ draw2d.Canvas = Class.extend(
                try{
 	               var hover = _this.getBestFigure(pos.x,pos.y);
 	               if(hover !== _this.currentHoverFigure && _this.currentHoverFigure!==null){
-	            	   _this.currentHoverFigure.onMouseLeave();
+	            	   _this.currentHoverFigure.onMouseLeave(); // deprecated
 	            	   _this.currentHoverFigure.fireEvent("mouseleave");
+                       _this.fireEvent("mouseleave", {figure:_this.currentHoverFigure});
 	               }
 	               if(hover !== _this.currentHoverFigure && hover!==null){
 	            	   hover.onMouseEnter();
 	            	   hover.fireEvent("mouseenter");
+                       _this.fireEvent("mouseenter", {figure:hover});
 	               }
 	               _this.currentHoverFigure = hover;
                }
@@ -19848,6 +19850,7 @@ draw2d.Canvas = Class.extend(
                _this.editPolicy.each(function(i,policy){
                    policy.onMouseMove(_this, pos.x, pos.y, event.shiftKey, event.ctrlKey);
                });
+               this.fireEvent("mousemove",{x:pos.x, y:pos.y, shiftKey:event.shiftKey, ctrlKey:event.ctrlKey, hoverFigure:this.currentHoverFigure});
             }
             else{
                var diffXAbs = (event.clientX - _this.mouseDownX)*_this.zoomFactor;
