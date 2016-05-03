@@ -6102,14 +6102,10 @@ draw2d.layout.connection.ConnectionRouter = Class.extend({
     
     _paint: function(conn)
     {
-        // calculate the path string for the SVG rendering
-        // Important: to avoid subpixel error rendering we add 0.5 to each coordinate
-        //            With this offset the canvas can paint the line on a "full pixel" instead
-        //            of subpixel rendering.
         var ps = conn.getVertices();
         var p = ps.get(0);
         var distance = conn.getRadius();
-        var path = ["M",(p.x|0)+0.5," ",(p.y|0)+0.5];
+        var path = ["M",p.x," ",p.y];
         var i=1;
         if(distance>0){
             var lastP = p;
@@ -6117,22 +6113,22 @@ draw2d.layout.connection.ConnectionRouter = Class.extend({
             for(  ;i<length;i++){
                   p = ps.get(i);
                   inset = draw2d.geo.Util.insetPoint(p,lastP, distance);
-                  path.push("L", (inset.x|0)+0.5, ",", (inset.y|0)+0.5);
+                  path.push("L", (inset), ",", inset.y);
     
                   p2 = ps.get(i+1);
                   inset = draw2d.geo.Util.insetPoint(p,p2,distance);
                   
-                  path.push("Q",p.x,",",p.y," ", (inset.x|0)+0.5, ", ", (inset.y|0)+0.5);
+                  path.push("Q",p.x,",",p.y," ", inset.x, ", ", inset.y);
                   lastP = p;
             }
             p = ps.get(i);
-            path.push("L", (p.x|0)+0.5, ",", (p.y|0)+0.5);
+            path.push("L", p.x, ",", p.y);
        }
         else{
             var length = ps.getSize();
             for( ;i<length;i++){
                 p = ps.get(i);
-                path.push("L", (p.x|0)+0.5, ",", (p.y|0)+0.5);
+                path.push("L", p.x, ",", p.y);
           }
         }
          conn.svgPathString = path.join("");
@@ -19551,7 +19547,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.21",
+    version : "6.1.22",
     i18n : {
         command : {
             move : "Move Shape",
