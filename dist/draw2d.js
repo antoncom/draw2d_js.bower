@@ -19547,7 +19547,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.22",
+    version : "6.1.23",
     i18n : {
         command : {
             move : "Move Shape",
@@ -20960,7 +20960,18 @@ draw2d.Canvas = Class.extend(
             });
         };
 
-        // Checking ports first
+
+        // ResizeHandles
+        //
+        var i,len;
+        for ( i = 0, len = this.resizeHandles.getSize(); i < len; i++) {
+            testFigure = this.resizeHandles.get(i);
+            if (testFigure.isVisible() && testFigure.hitTest(x, y) && !isInBlacklist(testFigure) &&  isInWhitelist(testFigure)){
+                return testFigure;
+            }
+        }
+
+        // Checking ports
         //
         for ( i = 0, len = this.commonPorts.getSize(); i < len; i++) {
             port = this.commonPorts.get(i);
@@ -20977,16 +20988,6 @@ draw2d.Canvas = Class.extend(
             }
         }
 
-
-        // ResizeHandles next
-        //
-        var i,len;
-        for ( i = 0, len = this.resizeHandles.getSize(); i < len; i++) {
-            testFigure = this.resizeHandles.get(i);
-            if (testFigure.isVisible() && testFigure.hitTest(x, y) && !isInBlacklist(testFigure) &&  isInWhitelist(testFigure)){
-                return testFigure; 
-            }
-        }
 
 
         //  Check now the common objects.
