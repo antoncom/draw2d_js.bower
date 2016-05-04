@@ -7104,7 +7104,7 @@ draw2d.layout.connection.ManhattanBridgedConnectionRouter = draw2d.layout.connec
 		//
 		var ps = conn.getVertices();
 		var p = ps.get(0);
-		var path = [ "M", (p.x|0)+0.5, " ", (p.y|0)+0.5 ];
+		var path = [ "M", p.x, " ", p.y];
 		var oldP = p;
 		for (i = 1; i < ps.getSize(); i++) {
 			p = ps.get(i);
@@ -7128,14 +7128,14 @@ draw2d.layout.connection.ManhattanBridgedConnectionRouter = draw2d.layout.connec
 					// we draw only horizontal bridges. Just a design decision
 					//
 					if (p.y === interP.y) {
-						path.push(" L", ((interP.x - bridgeWidth)|0)+0.5, " ", (interP.y|0)+0.5);
+						path.push(" L", (interP.x - bridgeWidth), " ", interP.y);
 						path.push(bridgeCode);
 					}
 				}
 
 			});
 
-			path.push(" L", (p.x|0)+0.5, " ", (p.y|0)+0.5);
+			path.push(" L", p.x, " ", p.y);
 			oldP = p;
 		}
 		conn.svgPathString = path.join("");
@@ -7848,7 +7848,7 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
 		//
 		var ps = conn.getVertices();
 		var p = ps.get(0);
-        var path = [ "M", (p.x|0)+0.5, " ", (p.y|0)+0.5 ];
+        var path = [ "M", p.x, " ", p.y];
 
         var oldP = p;
         var bridgeWidth = null;
@@ -7893,7 +7893,7 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
         				    //
         			        if(this.abortRoutingOnFirstVertexNode===true){
             				    if(conn.getSource()==other.getSource()|| conn.getSource()==other.getTarget()){
-            				        path = [ "M", (interP.x|0)+0.5, " ", (interP.y|0)+0.5 ];
+            				        path = [ "M", interP.x, " ", interP.y];
             				        if(lastVerteNode!==null){
                                         lastVerteNode.remove();
             				            conn.vertexNodes.exclude(lastVerteNode);
@@ -7906,13 +7906,13 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
                     // ..or a bridge. We draw only horizontal bridges. Just a design decision
                     //
     			    else if (p.y === interP.y) {
-                        path.push(" L", ((interP.x - bridgeWidth)|0)+0.5, " ", (interP.y|0)+0.5);
+                        path.push(" L", (interP.x - bridgeWidth), " ", interP.y);
                         path.push(bridgeCode);
     			    }
                 }
 			},this));
 
-			path.push(" L", (p.x|0)+0.5, " ", (p.y|0)+0.5);
+			path.push(" L", p.x, " ", p.y);
 			oldP = p;
 		}
 		conn.svgPathString = path.join("");
@@ -19547,7 +19547,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.23",
+    version : "6.1.24",
     i18n : {
         command : {
             move : "Move Shape",
