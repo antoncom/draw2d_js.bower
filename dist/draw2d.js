@@ -7843,9 +7843,6 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
         }
         conn.vertexNodes = conn.canvas.paper.set();
 
-        // ATTENTION: we cast all x/y coordinates to integer and add 0.5 to avoid subpixel rendering of
-		//            the connection. The 1px or 2px lines look much clearer than before.
-		//
 		var ps = conn.getVertices();
 		var p = ps.get(0);
         var path = [ "M", p.x, " ", p.y];
@@ -19547,7 +19544,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.24",
+    version : "6.1.25",
     i18n : {
         command : {
             move : "Move Shape",
