@@ -6102,10 +6102,14 @@ draw2d.layout.connection.ConnectionRouter = Class.extend({
     
     _paint: function(conn)
     {
+        // calculate the path string for the SVG rendering
+        // Important: to avoid subpixel error rendering we add 0.5 to each coordinate
+        //            With this offset the canvas can paint the line on a "full pixel" instead
+        //            of subpixel rendering.
         var ps = conn.getVertices();
         var p = ps.get(0);
         var distance = conn.getRadius();
-        var path = ["M",p.x," ",p.y];
+        var path = ["M",(p.x|0)+0.5," ",(p.y|0)+0.5];
         var i=1;
         if(distance>0){
             var lastP = p;
@@ -6113,22 +6117,22 @@ draw2d.layout.connection.ConnectionRouter = Class.extend({
             for(  ;i<length;i++){
                   p = ps.get(i);
                   inset = draw2d.geo.Util.insetPoint(p,lastP, distance);
-                  path.push("L", (inset), ",", inset.y);
+                  path.push("L", (inset.x|0)+0.5, ",", (inset.y|0)+0.5);
     
                   p2 = ps.get(i+1);
                   inset = draw2d.geo.Util.insetPoint(p,p2,distance);
                   
-                  path.push("Q",p.x,",",p.y," ", inset.x, ", ", inset.y);
+                  path.push("Q",p.x,",",p.y," ", (inset.x|0)+0.5, ", ", (inset.y|0)+0.5);
                   lastP = p;
             }
             p = ps.get(i);
-            path.push("L", p.x, ",", p.y);
+            path.push("L", (p.x|0)+0.5, ",", (p.y|0)+0.5);
        }
         else{
             var length = ps.getSize();
             for( ;i<length;i++){
                 p = ps.get(i);
-                path.push("L", p.x, ",", p.y);
+                path.push("L", (p.x|0)+0.5, ",", (p.y|0)+0.5);
           }
         }
          conn.svgPathString = path.join("");
@@ -7104,7 +7108,7 @@ draw2d.layout.connection.ManhattanBridgedConnectionRouter = draw2d.layout.connec
 		//
 		var ps = conn.getVertices();
 		var p = ps.get(0);
-		var path = [ "M", p.x, " ", p.y];
+		var path = [ "M", (p.x|0)+0.5, " ", (p.y|0)+0.5 ];
 		var oldP = p;
 		for (i = 1; i < ps.getSize(); i++) {
 			p = ps.get(i);
@@ -7128,14 +7132,14 @@ draw2d.layout.connection.ManhattanBridgedConnectionRouter = draw2d.layout.connec
 					// we draw only horizontal bridges. Just a design decision
 					//
 					if (p.y === interP.y) {
-						path.push(" L", (interP.x - bridgeWidth), " ", interP.y);
+						path.push(" L", ((interP.x - bridgeWidth)|0)+0.5, " ", (interP.y|0)+0.5);
 						path.push(bridgeCode);
 					}
 				}
 
 			});
 
-			path.push(" L", p.x, " ", p.y);
+			path.push(" L", (p.x|0)+0.5, " ", (p.y|0)+0.5);
 			oldP = p;
 		}
 		conn.svgPathString = path.join("");
@@ -7843,9 +7847,12 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
         }
         conn.vertexNodes = conn.canvas.paper.set();
 
+        // ATTENTION: we cast all x/y coordinates to integer and add 0.5 to avoid subpixel rendering of
+		//            the connection. The 1px or 2px lines look much clearer than before.
+		//
 		var ps = conn.getVertices();
 		var p = ps.get(0);
-        var path = [ "M", p.x, " ", p.y];
+        var path = [ "M", (p.x|0)+0.5, " ", (p.y|0)+0.5 ];
 
         var oldP = p;
         var bridgeWidth = null;
@@ -7890,7 +7897,7 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
         				    //
         			        if(this.abortRoutingOnFirstVertexNode===true){
             				    if(conn.getSource()==other.getSource()|| conn.getSource()==other.getTarget()){
-            				        path = [ "M", interP.x, " ", interP.y];
+            				        path = [ "M", (interP.x|0)+0.5, " ", (interP.y|0)+0.5 ];
             				        if(lastVerteNode!==null){
                                         lastVerteNode.remove();
             				            conn.vertexNodes.exclude(lastVerteNode);
@@ -7903,13 +7910,13 @@ draw2d.layout.connection.CircuitConnectionRouter = draw2d.layout.connection.Manh
                     // ..or a bridge. We draw only horizontal bridges. Just a design decision
                     //
     			    else if (p.y === interP.y) {
-                        path.push(" L", (interP.x - bridgeWidth), " ", interP.y);
+                        path.push(" L", ((interP.x - bridgeWidth)|0)+0.5, " ", (interP.y|0)+0.5);
                         path.push(bridgeCode);
     			    }
                 }
 			},this));
 
-			path.push(" L", p.x, " ", p.y);
+			path.push(" L", (p.x|0)+0.5, " ", (p.y|0)+0.5);
 			oldP = p;
 		}
 		conn.svgPathString = path.join("");
@@ -19544,7 +19551,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.25",
+    version : "6.1.26",
     i18n : {
         command : {
             move : "Move Shape",
@@ -23866,7 +23873,7 @@ draw2d.Figure = Class.extend({
      * 
      * @returns {Boolean}
      */
-    hitTest : function ( iX , iY, corona)
+    hitTest: function ( iX , iY, corona)
     {
         if(typeof corona === "number"){
             return this.getBoundingBox().scale(corona,corona).hitTest(iX,iY);
