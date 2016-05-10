@@ -5222,10 +5222,10 @@ draw2d.command.CommandDelete = draw2d.command.Command.extend({
           }
        }
        
-        
-       if(this.figure instanceof draw2d.Connection){
-           this.figure.disconnect();
-       }   
+   // already done in the canvas.remove(..) method
+   //    if(this.figure instanceof draw2d.Connection){
+   //        this.figure.disconnect();
+   //    }
     
        // remove this figure from the parent 
        //
@@ -6150,7 +6150,7 @@ draw2d.layout.connection.ConnectionRouter = Class.extend({
      * @method
      * Callback method if the router has been assigned to a connection.
      * 
-     * @param {draw2d.Connection} connection The assigned connection
+     * @param {draw2d.shape.basic.PolyLine} connection The assigned connection
      * @template
      * @since 2.7.2
      */
@@ -6163,7 +6163,7 @@ draw2d.layout.connection.ConnectionRouter = Class.extend({
      * @method
      * Callback method if the router has been removed from the connection.
      * 
-     * @param {draw2d.Connection} connection The related connection
+     * @param {draw2d.shape.basic.PolyLine} connection The related connection
      * @template
      * @since 2.7.2
      */
@@ -19665,9 +19665,11 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
      */
     onDragEnd: function(canvas, figure, x, y, shiftKey, ctrlKey)
     {
-        this.tweenable.stop(true);
-        this.tweenable.dispose();
-        this.tweenable= null;
+        if(this.tweenable) {
+            this.tweenable.stop(true);
+            this.tweenable.dispose();
+            this.tweenable = null;
+        }
         canvas.getAllPorts().each(function(i, element){
             // IMPORTANT shortcut to avoid rendering errors!!
             // performance shortcut to avoid a lot of events and recalculate/routing of all related connections
@@ -19703,7 +19705,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.27",
+    version : "6.1.28",
     i18n : {
         command : {
             move : "Move Shape",
