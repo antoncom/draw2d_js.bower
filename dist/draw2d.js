@@ -11091,9 +11091,11 @@ draw2d.policy.canvas.CanvasPolicy = draw2d.policy.EditPolicy.extend({
      * @param {Number} dy The y diff between start of dragging and this event
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      * @template
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
     },
     
@@ -11842,7 +11844,7 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
         this.mouseMovedDuringMouseDown  = false;
         var canDragStart = true;
 
-        // ignore ports since version 6.1.0. This is handled by the COnnectionCreatePolicy
+        // ignore ports since version 6.1.0. This is handled by the ConnectionCreatePolicy
         //
         var figure = canvas.getBestFigure(x, y, draw2d.Port);
 
@@ -11896,9 +11898,11 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
      * @param {Number} dy The y diff between start of dragging and this event
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      * @template
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         this.mouseMovedDuringMouseDown = true;
         if (this.mouseDraggingElement !== null) {
@@ -11906,11 +11910,11 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
             //
             var sel =canvas.getSelection();
             if(!sel.contains(this.mouseDraggingElement)){
-                this.mouseDraggingElement.onDrag(dx, dy, dx2, dy2);
+                this.mouseDraggingElement.onDrag(dx, dy, dx2, dy2, shiftKey, ctrlKey);
             }
             else{
                 sel.each(function(i,figure){
-                    figure.onDrag(dx, dy, dx2, dy2);
+                    figure.onDrag(dx, dy, dx2, dy2, shiftKey, ctrlKey);
                 });
             }
             
@@ -11925,7 +11929,7 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
                 }
                 if (target !== null) {
                     canvas.currentDropTarget = target.delegateTarget(this.mouseDraggingElement);
-                    // inform all listener that the element has accept the dragEtner event
+                    // inform all listener that the element has accept the dragEnter event
                     //
                     if( canvas.currentDropTarget !==null) {
                         canvas.currentDropTarget.onDragEnter(this.mouseDraggingElement); // legacy
@@ -11939,12 +11943,12 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
        //
        else if(this.mouseDownElement!==null && !(this.mouseDownElement instanceof draw2d.Connection)){
            if(this.mouseDownElement.panningDelegate!==null){
-               this.mouseDownElement.panningDelegate.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2});
-               this.mouseDownElement.panningDelegate.onPanning(dx, dy, dx2, dy2);
+               this.mouseDownElement.panningDelegate.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2, shiftKey:shiftKey, ctrlKey:ctrlKey});
+               this.mouseDownElement.panningDelegate.onPanning(dx, dy, dx2, dy2, shiftKey, ctrlKey);
            }
            else{
-               this.mouseDownElement.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2});
-               this.mouseDownElement.onPanning(dx, dy, dx2, dy2);
+               this.mouseDownElement.fireEvent("panning", {dx:dx, dy:dy, dx2:dx2, dy2:dy2, shiftKey:shiftKey, ctrlKey:ctrlKey });
+               this.mouseDownElement.onPanning(dx, dy, dx2, dy2, shiftKey, ctrlKey);
            }
        }
     },
@@ -12139,7 +12143,7 @@ draw2d.policy.canvas.GhostMoveSelectionPolicy =  draw2d.policy.canvas.SingleSele
     /**
      * @inheritdoc
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         this.mouseMovedDuringMouseDown = true;
         if (this.mouseDraggingElement !== null) {
@@ -12147,7 +12151,7 @@ draw2d.policy.canvas.GhostMoveSelectionPolicy =  draw2d.policy.canvas.SingleSele
             // if the figure not part of the selection it must be a ResizeHandle...
             var sel =canvas.getSelection().getAll();
             if(!sel.contains(this.mouseDraggingElement)){
-                this.mouseDraggingElement.onDrag(dx, dy, dx2, dy2);
+                this.mouseDraggingElement.onDrag(dx, dy, dx2, dy2, shiftKey, ctrlKey);
             }
             // it is a normal draw2d.Figure
             else{
@@ -12222,12 +12226,12 @@ draw2d.policy.canvas.GhostMoveSelectionPolicy =  draw2d.policy.canvas.SingleSele
        //
        else if(this.mouseDownElement!==null && !(this.mouseDownElement instanceof draw2d.Connection)){
             if(this.mouseDownElement.panningDelegate!==null){
-                this.mouseDownElement.panningDelegate.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2});
-                this.mouseDownElement.panningDelegate.onPanning(dx, dy, dx2, dy2);
+                this.mouseDownElement.panningDelegate.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2, shiftKey:shiftKey, ctrlKey:ctrlKey});
+                this.mouseDownElement.panningDelegate.onPanning(dx, dy, dx2, dy2, shiftKey, ctrlKey);
             }
             else{
-                this.mouseDownElement.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2});
-                this.mouseDownElement.onPanning(dx, dy, dx2, dy2);
+                this.mouseDownElement.fireEvent("panning", {dx:dx,dy:dy,dx2:dx2,dy2:dy2, shiftKey:shiftKey, ctrlKey:ctrlKey});
+                this.mouseDownElement.onPanning(dx, dy, dx2, dy2, shiftKey, ctrlKey);
             }
        }
     },
@@ -12345,7 +12349,7 @@ draw2d.policy.canvas.PanningSelectionPolicy =  draw2d.policy.canvas.SingleSelect
     init: function()
     {
         this._super();
-     },
+    },
    
     
     /**
@@ -12356,12 +12360,14 @@ draw2d.policy.canvas.PanningSelectionPolicy =  draw2d.policy.canvas.SingleSelect
      * @param {Number} dy The y diff between start of dragging and this event
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      * @template
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         
-        this._super(canvas, dx,dy,dx2,dy2);
+        this._super(canvas, dx,dy,dx2,dy2, shiftKey, ctrlKey);
         
         if (this.mouseDraggingElement === null && this.mouseDownElement===null) {
            var area = canvas.getScrollArea();
@@ -12606,9 +12612,11 @@ draw2d.policy.canvas.BoundingboxSelectionPolicy =  draw2d.policy.canvas.SingleSe
      * @param {Number} dy The y diff between start of dragging and this event
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      * @template
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         // don't drag a selection box if we drag&drop a port
         //
@@ -12617,7 +12625,7 @@ draw2d.policy.canvas.BoundingboxSelectionPolicy =  draw2d.policy.canvas.SingleSe
         }
 
         try{
-            this._super(canvas, dx,dy,dx2,dy2);
+            this._super(canvas, dx,dy,dx2,dy2, shiftKey, ctrlKey);
             
             if (this.mouseDraggingElement === null && this.mouseDownElement===null && this.boundingBoxFigure1===null) {
                 this.boundingBoxFigure1 = new draw2d.shape.basic.Rectangle({
@@ -12790,9 +12798,11 @@ draw2d.policy.canvas.ReadOnlySelectionPolicy = draw2d.policy.canvas.SelectionPol
      * @param {Number} dy The y diff between start of dragging and this event
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      * @template
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         var area = canvas.getScrollArea();
         area.scrollTop(area.scrollTop()-dy2);
@@ -12967,8 +12977,10 @@ draw2d.policy.canvas.FadeoutDecorationPolicy = draw2d.policy.canvas.DecorationPo
      * @param {Number} dy The y diff between start of dragging and this event
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         if(this.portDragging === false){
             this.hidePortsCounter=0;
@@ -13129,7 +13141,7 @@ draw2d.policy.canvas.CoronaDecorationPolicy = draw2d.policy.canvas.DecorationPol
     /**
      * @inheritdoc
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         this.updatePorts(canvas, this.startDragX+dx, this.startDragY+dy);
     },
@@ -15414,14 +15426,14 @@ draw2d.policy.connection.ComposedConnectionCreatePolicy = draw2d.policy.connecti
         this._super();
     },
 
-    onMouseDown: function(canvas, x, y, shiftKey, ctrlKey)
+    onMouseDown: function()
     {
         var _arg = arguments;
         $.each(this.policies, function(i,p){
             p.onMouseDown.apply(p,_arg);
         });
     },
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function()
     {
         var _arg = arguments;
         $.each(this.policies, function(i,p){
@@ -15429,7 +15441,7 @@ draw2d.policy.connection.ComposedConnectionCreatePolicy = draw2d.policy.connecti
         });
     },
 
-    onMouseUp: function(canvas, x, y, shiftKey, ctrlKey)
+    onMouseUp: function()
     {
         var _arg = arguments;
         $.each(this.policies, function(i,p){
@@ -15437,14 +15449,14 @@ draw2d.policy.connection.ComposedConnectionCreatePolicy = draw2d.policy.connecti
         });
     },
 
-    onClick: function(figure, x, y, shiftKey, ctrlKey)
+    onClick: function()
     {
         var _arg = arguments;
         $.each(this.policies, function(i,p){
             p.onClick.apply(p,_arg);
         });
     },
-    onMouseMove: function(canvas, x, y, shiftKey, ctrlKey)
+    onMouseMove: function()
     {
         var _arg = arguments;
         $.each(this.policies, function(i,p){
@@ -16824,7 +16836,7 @@ draw2d.policy.connection.DragConnectionCreatePolicy = draw2d.policy.connection.C
      * @param {Number} dy2 The y diff since the last call of this dragging operation
      * @template
      */
-    onMouseDrag: function(canvas, dx, dy, dx2, dy2)
+    onMouseDrag: function(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         try{
             if (this.mouseDraggingElement !== null) {
@@ -16832,7 +16844,7 @@ draw2d.policy.connection.DragConnectionCreatePolicy = draw2d.policy.connection.C
                 var ct = this.currentTarget;
 
                 de.isInDragDrop = true;
-                de.onDrag(dx, dy, dx2, dy2);
+                de.onDrag(dx, dy, dx2, dy2, shiftKey, ctrlKey);
 
                 var target=canvas.getBestFigure(de.getAbsoluteX(),de.getAbsoluteY(), de);
 
@@ -19695,7 +19707,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.32",
+    version : "6.1.33",
     i18n : {
         command : {
             move : "Move Shape",
@@ -20336,7 +20348,7 @@ draw2d.Canvas = Class.extend(
                var diffXAbs = (event.clientX - _this.mouseDownX)*_this.zoomFactor;
                var diffYAbs = (event.clientY - _this.mouseDownY)*_this.zoomFactor;
                _this.editPolicy.each(function(i,policy){
-                   policy.onMouseDrag(_this,diffXAbs, diffYAbs, diffXAbs-_this.mouseDragDiffX, diffYAbs-_this.mouseDragDiffY);
+                   policy.onMouseDrag(_this,diffXAbs, diffYAbs, diffXAbs-_this.mouseDragDiffX, diffYAbs-_this.mouseDragDiffY,  event.shiftKey, event.ctrlKey);
                });
                _this.mouseDragDiffX = diffXAbs;
                _this.mouseDragDiffY = diffYAbs;
@@ -23387,8 +23399,10 @@ draw2d.Figure = Class.extend({
      * @param {Number} dy the y difference between the start of the drag drop operation and now
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      **/
-    onDrag: function( dx,  dy, dx2, dy2)
+    onDrag: function( dx,  dy, dx2, dy2, shiftKey, ctrlKey)
     {
       var _this = this;
 
@@ -23428,7 +23442,7 @@ draw2d.Figure = Class.extend({
 
       // fire an event
       // @since 5.3.3
-      this.fireEvent("drag",{dx:dx, dy:dy, dx2:dx2, dy2:dy2});
+      this.fireEvent("drag",{dx:dx, dy:dy, dx2:dx2, dy2:dy2, shiftKey:shiftKey, ctrlKey:ctrlKey});
     },
 
     /**
@@ -23446,9 +23460,11 @@ draw2d.Figure = Class.extend({
      * @param {Number} dy the y difference between the mouse down operation and now
      * @param {Number} dx2 The x diff since the last call of this dragging operation
      * @param {Number} dy2 The y diff since the last call of this dragging operation
+     * @param {Boolean} shiftKey true if the shift key has been pressed during this event
+     * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
      * @template
      */
-    onPanning: function(dx, dy, dx2, dy2)
+    onPanning: function(dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
     },
 
