@@ -19695,7 +19695,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.30",
+    version : "6.1.31",
     i18n : {
         command : {
             move : "Move Shape",
@@ -31927,6 +31927,20 @@ draw2d.shape.composite.Raft = draw2d.shape.composite.WeakComposite.extend({
         
         if(dx ===0 && dy===0 ){
             return this;
+        }
+
+        // we must move circuits with "user routed" elements as well if the start/target is withing
+        // the raft. Some segments stay still because some coordinates has a fixed position
+        //
+        if(this.canvas!==null) {
+            aboardedFigures = aboardedFigures.clone();
+            this.canvas.getLines().each(function (i, line) {
+                if (line instanceof draw2d.Connection) {
+                    if (aboardedFigures.contains(line.getSource().getRoot()) && aboardedFigures.contains(line.getTarget().getRoot())) {
+                        aboardedFigures.add(line);
+                    }
+                }
+            });
         }
 
         aboardedFigures.each(function(i,figure){
