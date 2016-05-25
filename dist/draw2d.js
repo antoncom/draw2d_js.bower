@@ -18702,7 +18702,7 @@ draw2d.policy.line.OrthogonalSelectionFeedbackPolicy = draw2d.policy.line.LineSe
         // the right installed policy.
         //
         this.ResizeHandle = draw2d.ResizeHandle.extend({
-            NAME : "#ResizeHandle",
+            NAME : "draw2d.policy.line.OrthogonalSelectionFeedbackPolicy.ResizeHandle",
 
              init: function( figure, index)
              {
@@ -19707,7 +19707,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.34",
+    version : "6.1.35",
     i18n : {
         command : {
             move : "Move Shape",
