@@ -19707,7 +19707,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.36",
+    version : "6.1.37",
     i18n : {
         command : {
             move : "Move Shape",
@@ -51062,7 +51062,7 @@ draw2d.io.json.Reader = draw2d.io.Reader.extend({
      */
     createFigureFromType:function(type)
     {
-        return eval("new "+element.type+"()");
+        return eval("new "+type+"()");
     }
 });
 /*****************************************
