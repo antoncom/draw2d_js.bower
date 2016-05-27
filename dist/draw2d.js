@@ -19707,7 +19707,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.35",
+    version : "6.1.36",
     i18n : {
         command : {
             move : "Move Shape",
@@ -50972,6 +50972,7 @@ draw2d.io.json.Reader = draw2d.io.Reader.extend({
      * @param {Object} document the json object to load.
      */
     unmarshal: function(canvas, json){
+        var _this = this;
         var result = new draw2d.util.ArrayList();
         
         if(typeof json ==="string"){
@@ -50981,7 +50982,7 @@ draw2d.io.json.Reader = draw2d.io.Reader.extend({
         var node=null;
         $.each(json, $.proxy(function(i, element){
             try{
-                var o = eval("new "+element.type+"()");
+                var o = _this.createFigureFromType(element.type);
                 var source= null;
                 var target=null;
                 for(i in element){
@@ -51050,6 +51051,18 @@ draw2d.io.json.Reader = draw2d.io.Reader.extend({
         canvas.showDecoration();
         
         return result;
+    },
+
+    /**
+     * @method
+     * Factory method to create an instance of the given element type.
+     *
+     * @param {String} type
+     * @return {draw2d.Figure}
+     */
+    createFigureFromType:function(type)
+    {
+        return eval("new "+element.type+"()");
     }
 });
 /*****************************************
