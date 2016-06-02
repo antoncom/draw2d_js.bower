@@ -19707,7 +19707,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.39",
+    version : "6.1.40",
     i18n : {
         command : {
             move : "Move Shape",
@@ -22888,7 +22888,12 @@ draw2d.Figure = Class.extend({
              }
          }
          else{
-             this.getShapeElement().insertAfter(figure.getTopLevelShapeElement());
+             // the canvas of the figure can be NULL if we delete objects in complex zenario
+             // e.g. A shape with a lot of Ports and Connections are deleted. In this case it can
+             // happen that a connect fires an event that he want draw in front of an (already deleted) port
+             if(figure.getCanvas()!==null) {
+                 this.getShapeElement().insertAfter(figure.getTopLevelShapeElement());
+             }
              
              if(this.canvas!==null){
                  var figures = this.canvas.getFigures();
@@ -22942,7 +22947,12 @@ draw2d.Figure = Class.extend({
                  lines.insertElementAt(this,0);
              }
              if(typeof figure !=="undefined"){
-                 this.getShapeElement().insertBefore(figure.getShapeElement());
+                 // the canvas of the figure can be NULL if we delete objects in complex zenario
+                 // e.g. A shape with a lot of Ports and Connections are deleted. In this case it can
+                 // happen that a connect fires an event that he want draw in front of an (already deleted) port
+                 if(figure.getCanvas()!==null) {
+                     this.getShapeElement().insertBefore(figure.getShapeElement());
+                 }
              }
              else{
                  this.getShapeElement().toBack();
