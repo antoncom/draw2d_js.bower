@@ -19707,7 +19707,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.37",
+    version : "6.1.38",
     i18n : {
         command : {
             move : "Move Shape",
@@ -22941,14 +22941,12 @@ draw2d.Figure = Class.extend({
              }else if(lines.remove(this)!==null){
                  lines.insertElementAt(this,0);
              }
-         }
-         
-
-         if(typeof figure !=="undefined"){
-             this.getShapeElement().insertBefore(figure.getShapeElement());
-         }
-         else{
-             this.getShapeElement().toBack();
+             if(typeof figure !=="undefined"){
+                 this.getShapeElement().insertBefore(figure.getShapeElement());
+             }
+             else{
+                 this.getShapeElement().toBack();
+             }
          }
 
          // Bring all children in front of "this" figure
@@ -26501,12 +26499,14 @@ draw2d.SetFigure = draw2d.shape.basic.Rectangle.extend({
             }
         }
 
-        
-        if(typeof figure !=="undefined"){
-            this.getShapeElement().insertBefore(figure.getShapeElement());
-        }
-        else{
-            this.getShapeElement().toBack();
+
+        if(this.canvas!==null) {
+            if (typeof figure !== "undefined") {
+                this.getShapeElement().insertBefore(figure.getShapeElement());
+            }
+            else {
+                this.getShapeElement().toBack();
+            }
         }
         
         // and last but not least - the ports are always on top
@@ -51062,7 +51062,7 @@ draw2d.io.json.Reader = draw2d.io.Reader.extend({
      */
     createFigureFromType:function(type)
     {
-        return eval("new "+type+"()");
+        return eval("new "+element.type+"()");
     }
 });
 /*****************************************
