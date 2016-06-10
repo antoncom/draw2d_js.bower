@@ -1676,7 +1676,15 @@ Raphael.fn.polygon = function(pointString) {
                 }
             }
             return result;
+        },
+
+        ensureDefault:function( json, attribute, value)
+        {
+            if (!json.hasOwnProperty(attribute)) {
+                json[attribute] = value;
+            }
         }
+
         
         
 };
@@ -19707,7 +19715,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.37",
+    version : "6.1.41",
     i18n : {
         command : {
             move : "Move Shape",
@@ -22888,7 +22896,12 @@ draw2d.Figure = Class.extend({
              }
          }
          else{
-             this.getShapeElement().insertAfter(figure.getTopLevelShapeElement());
+             // the canvas of the figure can be NULL if we delete objects in complex zenario
+             // e.g. A shape with a lot of Ports and Connections are deleted. In this case it can
+             // happen that a connect fires an event that he want draw in front of an (already deleted) port
+             if(figure.getCanvas()!==null) {
+                 this.getShapeElement().insertAfter(figure.getTopLevelShapeElement());
+             }
              
              if(this.canvas!==null){
                  var figures = this.canvas.getFigures();
@@ -22941,14 +22954,17 @@ draw2d.Figure = Class.extend({
              }else if(lines.remove(this)!==null){
                  lines.insertElementAt(this,0);
              }
-         }
-         
-
-         if(typeof figure !=="undefined"){
-             this.getShapeElement().insertBefore(figure.getShapeElement());
-         }
-         else{
-             this.getShapeElement().toBack();
+             if(typeof figure !=="undefined"){
+                 // the canvas of the figure can be NULL if we delete objects in complex zenario
+                 // e.g. A shape with a lot of Ports and Connections are deleted. In this case it can
+                 // happen that a connect fires an event that he want draw in front of an (already deleted) port
+                 if(figure.getCanvas()!==null) {
+                     this.getShapeElement().insertBefore(figure.getShapeElement());
+                 }
+             }
+             else{
+                 this.getShapeElement().toBack();
+             }
          }
 
          // Bring all children in front of "this" figure
@@ -26501,12 +26517,14 @@ draw2d.SetFigure = draw2d.shape.basic.Rectangle.extend({
             }
         }
 
-        
-        if(typeof figure !=="undefined"){
-            this.getShapeElement().insertBefore(figure.getShapeElement());
-        }
-        else{
-            this.getShapeElement().toBack();
+
+        if(this.canvas!==null) {
+            if (typeof figure !== "undefined") {
+                this.getShapeElement().insertBefore(figure.getShapeElement());
+            }
+            else {
+                this.getShapeElement().toBack();
+            }
         }
         
         // and last but not least - the ports are always on top
@@ -30270,8 +30288,8 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
             attributes = {};
         }
         attributes.path=this.svgPathString;
-        attributes["stroke-linecap"]="round";
-        attributes["stroke-linejoin"]="round";
+        draw2d.util.JSON.ensureDefault(attributes,"stroke-linecap" , "round");
+        draw2d.util.JSON.ensureDefault(attributes,"stroke-linejoin", "round");
 
         this._super( attributes);
 
