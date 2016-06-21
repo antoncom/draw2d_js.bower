@@ -1676,7 +1676,15 @@ Raphael.fn.polygon = function(pointString) {
                 }
             }
             return result;
+        },
+
+        ensureDefault:function( json, attribute, value)
+        {
+            if (!json.hasOwnProperty(attribute)) {
+                json[attribute] = value;
+            }
         }
+
         
         
 };
@@ -11766,6 +11774,10 @@ draw2d.policy.canvas.SelectionPolicy = draw2d.policy.canvas.CanvasPolicy.extend(
 
         figure.unselect();
 
+        // @since 6.1.42
+        canvas.fireEvent("unselect",{figure:figure});
+
+        // deprecated
         canvas.fireEvent("select",{figure:null});
     }
 });
@@ -19707,7 +19719,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.40",
+    version : "6.1.42",
     i18n : {
         command : {
             move : "Move Shape",
@@ -25830,18 +25842,10 @@ draw2d.VectorFigure = draw2d.shape.node.Node.extend({
                 attributes.stroke = this.color.hash();
             }
         }
-        
-        if(typeof attributes["stroke-width"]==="undefined"){
-            attributes["stroke-width"] = this.stroke;
-        }
-        
-        if(typeof attributes.fill === "undefined"){
-       	   attributes.fill = this.bgColor.hash();
-        }
 
-        if(this.dasharray!==null){
-            attributes["stroke-dasharray"]=this.dasharray;
-        }
+        draw2d.util.JSON.ensureDefault(attributes,"stroke-width" , this.stroke);
+        draw2d.util.JSON.ensureDefault(attributes,"fill" ,this.bgColor.hash());
+        draw2d.util.JSON.ensureDefault(attributes,"dasharray" , this.dasharray);
 
         this._super(attributes);
         
@@ -27345,17 +27349,15 @@ draw2d.shape.node.Fulcrum = draw2d.shape.node.Hub.extend({
     repaint: function(attributes)
     {
         if(this.repaintBlocked===true || this.shape===null){
-            return;
+            return this;
         }
     
         attributes= attributes || {};
         
         // set some good defaults if the parent didn't
-        if(typeof attributes.fill ==="undefined"){
-            attributes.fill=this.bgColor.hash();
-        }
+        draw2d.util.JSON.ensureDefault(attributes,"fill" ,this.bgColor.hash());
         
-       this._super(attributes);
+        return this._super(attributes);
     }
     
 });
@@ -28789,11 +28791,12 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
                 }, setter),
                 
              $.extend({},{
-                start:  this.getStartPosition,
-                end:  this.getEndPosition,
+                start:         this.getStartPosition,
+                end:           this.getEndPosition,
                 outlineColor:  this.getOutlineColor,
                 outlineStroke: this.getOutlineStroke,
                 stroke:        this.getStroke,
+                color:         this.getColor,
                 dasharray:     this.getDashArray,
                 vertices:      this.getVertices
             }, getter));
@@ -29077,16 +29080,14 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
        }
        else{
     	   // may a router has calculate another path. don't override them.
-    	   if(typeof attributes.path ==="undefined"){
+           if(typeof attributes.path ==="undefined"){
     		   attributes.path =["M",this.start.x,this.start.y,"L",this.end.x,this.end.y].join(" ");
     	   }
-    	   attributes.stroke = this.lineColor.hash();
-    	   attributes["stroke-width"]=this.stroke;
+           draw2d.util.JSON.ensureDefault(attributes,"stroke" ,this.lineColor.hash());
+           draw2d.util.JSON.ensureDefault(attributes,"stroke-width" ,this.stroke);
        }
-       
-       if(this.dasharray!==null){
-           attributes["stroke-dasharray"]=this.dasharray;
-       }
+
+       draw2d.util.JSON.ensureDefault(attributes,"dasharray" ,this.dasharray);
        
        this._super(attributes);
 
@@ -30269,7 +30270,7 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
     repaint: function(attributes)
     {
         if(this.repaintBlocked===true || this.shape===null){
-          return;
+          return this;
         }
 
         if(this.svgPathString===null || this.routingRequired===true){
@@ -30280,12 +30281,10 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
             attributes = {};
         }
         attributes.path=this.svgPathString;
-        attributes["stroke-linecap"]="round";
-        attributes["stroke-linejoin"]="round";
+        draw2d.util.JSON.ensureDefault(attributes,"stroke-linecap" , "round");
+        draw2d.util.JSON.ensureDefault(attributes,"stroke-linejoin", "round");
 
-        this._super( attributes);
-
-        return this;
+        return this._super( attributes);
     },
     
 
@@ -30720,10 +30719,8 @@ draw2d.shape.basic.Polygon = draw2d.VectorFigure.extend({
         }
         
         attributes= attributes || {};
-        
-        if(typeof attributes.path ==="undefined"){
-            attributes.path = this.svgPathString;
-        }
+
+        draw2d.util.JSON.ensureDefault(attributes,"path" ,this.svgPathString);
 
         this._super(attributes);
     },
@@ -33212,18 +33209,10 @@ draw2d.VectorFigure = draw2d.shape.node.Node.extend({
                 attributes.stroke = this.color.hash();
             }
         }
-        
-        if(typeof attributes["stroke-width"]==="undefined"){
-            attributes["stroke-width"] = this.stroke;
-        }
-        
-        if(typeof attributes.fill === "undefined"){
-       	   attributes.fill = this.bgColor.hash();
-        }
 
-        if(this.dasharray!==null){
-            attributes["stroke-dasharray"]=this.dasharray;
-        }
+        draw2d.util.JSON.ensureDefault(attributes,"stroke-width" , this.stroke);
+        draw2d.util.JSON.ensureDefault(attributes,"fill" ,this.bgColor.hash());
+        draw2d.util.JSON.ensureDefault(attributes,"dasharray" , this.dasharray);
 
         this._super(attributes);
         
@@ -37094,18 +37083,14 @@ draw2d.shape.diagram.Diagram = draw2d.SetFigure.extend({
     repaint: function(attributes)
     {
         if(this.repaintBlocked===true || this.shape==null){
-            return;
+            return this;
         }
         
         attributes= attributes || {};
 
-        if(typeof attributes.fill ==="undefined"){
-            attributes.fill= "none";
-        }
-         
-        this._super(attributes);
-        
-        return this;
+        draw2d.util.JSON.ensureDefault(attributes,"fill" ,"none");
+
+        return this._super(attributes);
     },
     
     applyTransformation: function()
@@ -38770,7 +38755,7 @@ draw2d.shape.layout.TableLayout= draw2d.shape.layout.Layout.extend({
 
         this.setDimension(1,1);
 
-        return r;
+        return this;
     },
 
     /**
