@@ -15382,6 +15382,9 @@ draw2d.policy.connection.ConnectionCreatePolicy = draw2d.policy.canvas.KeyboardP
                     function(){circle.remove()}
                 );
                 circle.animate(anim);
+                // return an emmpty raphael.set. The circle removes itself after animation is done
+                //
+                return this.canvas.paper.set();
                 break;
             case 1:
                 var circle1 = this.canvas.paper.circle(x, y, 3, 3).attr({fill: null, stroke:"#3f72bf"});
@@ -15395,9 +15398,15 @@ draw2d.policy.connection.ConnectionCreatePolicy = draw2d.policy.canvas.KeyboardP
                 var anim2 = Raphael.animation(
                     {transform: "s12", opacity:0.0, "stroke-width":4 },
                     500,
-                    "linear"
+                    "linear",
+                    function(){circle2.remove()}
                 );
                 circle2.animate(anim2);
+
+                // return the "circle1". This shape must be remove by the caller
+                // "circle2" is removed automaticly
+                //
+                return circle1;
                 break;
         }
     }
@@ -15615,11 +15624,8 @@ draw2d.policy.connection.ClickConnectionCreatePolicy = draw2d.policy.connection.
     onClick: function(figure, x, y, shiftKey, ctrlKey)
     {
         var _this = this;
-        //just consider ports
-        //
-        var port = figure;// .getCanvas().getBestFigure(x, y);
+        var port = figure;
 
-        // nothing to do
         if(port === null && this.port1 === null){
             return;
         }
@@ -15638,6 +15644,8 @@ draw2d.policy.connection.ClickConnectionCreatePolicy = draw2d.policy.connection.
             return;
         }
 
+        //just consider ports
+        //
         if(!(port instanceof draw2d.Port)){
             return;
         }
@@ -15685,22 +15693,14 @@ draw2d.policy.connection.ClickConnectionCreatePolicy = draw2d.policy.connection.
 
             var a= function() {
                 _this.tempConnection.shape.animate({"stroke-width" : 2}, 800, b);
-            }
+            };
             var b=function() {
                 _this.tempConnection.shape.animate({"stroke-width":1}, 800, a);
-            }
+            };
             a();
 
             var pos = port.getAbsolutePosition();
-            this.ripple(pos.x, pos.y, 1);
-            this.pulse = canvas.paper.circle(pos.x, pos.y, 3, 3).attr({fill: null, stroke:"#3f72bf"});
-            anim = Raphael.animation(
-                {transform: "s6", opacity:0.0, "stroke-width":1 },
-                1200,
-                "linear"
-            ).repeat(Infinity);
-
-            this.pulse.animate(anim);
+            this.pulse =this.ripple(pos.x, pos.y, 1);
             return;
         }
 
@@ -19719,7 +19719,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.42",
+    version : "6.1.43",
     i18n : {
         command : {
             move : "Move Shape",
