@@ -2326,12 +2326,12 @@ draw2d.geo.Point = Class.extend({
     	return this.x*that.y-this.y*that.x;
     },
 
-    
+
     lerp: function(that,t)
     {
     	return new draw2d.geo.Point(this.x+(that.x-this.x)*t,this.y+(that.y-this.y)*t);
     },
-    
+
 
     /**
      * @method 
@@ -3291,6 +3291,68 @@ draw2d.geo.Ray = draw2d.geo.Point.extend({
  * @param {Number} py y coordinate of the point to test
  **/
 draw2d.geo.Line = {
+
+    /**
+     * Returns the relative position of the point on the line between [0..1]
+     * The point "p" must be part of the line!!
+     *
+     * 0 => given point is on the start location
+     * ..=> given point is in between
+     * 1 => given point is at the end
+     *
+     * @return {Number}
+     */
+    inverseLerp: function( X1, Y1,  X2,  Y2, px, py)
+    {
+        var nenner = Math.abs(X2-X1);
+        var zaehler= Math.abs(X2-px);
+        if(nenner===0){
+            nenner = Math.abs(Y2-Y1);
+            zaehler= Math.abs(Y2-py);
+            if(nenner==0){
+                return 1;
+            }
+        }
+
+        return zaehler/nenner;
+    },
+
+
+    /**
+     * @method
+     * Returns the projection of the point onto the line.
+     *
+     * @param {Number} px the x coordinate of the test point
+     * @param {Number} py the y coordinate of the test point
+     * @return {draw2d.geo.Point}
+     **/
+    pointProjection: function( X1, Y1,  X2,  Y2, px, py)
+    {
+        var r = new draw2d.geo.Point(0,0);
+        if (X1 == X2 && Y1 == Y2) X1 -= 0.00001;
+
+        var U = ((px - X1) * (X2 - X1)) + ((py - Y1) * (Y2 - Y1));
+
+        var Udenom = Math.pow(X2 - X1, 2) + Math.pow(Y2 - Y1, 2);
+
+        U /= Udenom;
+
+        r.x = X1 + (U * (X2 - X1));
+        r.y = Y1 + (U * (Y2 - Y1));
+
+        var minx, maxx, miny, maxy;
+
+        minx = Math.min(X1, X2);
+        maxx = Math.max(X1, X2);
+
+        miny = Math.min(Y1, Y2);
+        maxy = Math.max(Y1, Y2);
+
+        var isValid = (r.x >= minx && r.x <= maxx) && (r.y >= miny && r.y <= maxy);
+
+        return isValid ? r : null;
+    },
+
     distance : function( X1, Y1,  X2,  Y2, px, py)
     {
         // Adjust vectors relative to X1,Y1
@@ -10391,7 +10453,7 @@ draw2d.layout.locator.PolylineMidpointLocator= draw2d.layout.locator.ManhattanMi
  * 
  * A ParallelMidpointLocator that is used to place label at the midpoint of a  routed
  * connection. The midpoint is always in the center of an edge.
- * The label is aligned to the connection angle.
+ * The label is aligned to the connection angle at the calculated conection segment.
  * 
  *
  * @author Andreas Herz
@@ -10403,7 +10465,7 @@ draw2d.layout.locator.ParallelMidpointLocator= draw2d.layout.locator.ConnectionL
     
     /**
      * @constructor
-     * Constructs a ManhattanMidpointLocator with associated Connection c.
+     * Constructs a ParallelMidpointLocator with optional padding to the connection.
      * 
      * if the parameter <b>distanceFromConnection</b> is less than zero the label is
      * placed above of the connection. Else the label is below the connection.
@@ -10436,8 +10498,9 @@ draw2d.layout.locator.ParallelMidpointLocator= draw2d.layout.locator.ConnectionL
        var points = conn.getVertices();
        
        var segmentIndex = Math.floor((points.getSize() -2) / 2);
-       if (points.getSize() <= segmentIndex+1)
-          return; 
+       if (points.getSize() <= segmentIndex+1) {
+           return;
+       }
     
        var p1 = points.get(segmentIndex);
        var p2 = points.get(segmentIndex + 1);
@@ -19719,7 +19782,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.43",
+    version : "6.1.44",
     i18n : {
         command : {
             move : "Move Shape",
@@ -29630,7 +29693,7 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
    getSegments: function()
    {
        var result = new draw2d.util.ArrayList();
-       result.add({start: this.getStartPoint(), end: this.getEndPoint()});
+       result.add({start: this.getStartPosition(), end: this.getEndPosition()});
        
        return result;
    },
@@ -29745,8 +29808,41 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
    {
      return draw2d.shape.basic.Line.hit(this.corona+ this.stroke, this.start.x,this.start.y, this.end.x, this.end.y, px,py);
    },
-   
-   /**
+
+    /**
+     * @method
+     * Returns the projection of the point on the line.
+     *
+     * @param {Number} px the x coordinate of the test point
+     * @param {Number} py the y coordinate of the test point
+     * @return {draw2d.geo.Point}
+     **/
+    pointProjection: function( px, py)
+    {
+        var pt =  new draw2d.geo.Point(px,py);
+        var p1=this.getStartPosition();
+        var p2=this.getEndPosition();
+        return draw2d.geo.Line.pointProjection(p1.x,p1.y,p2.x,p2.y,pt.x,pt.y);
+    },
+
+
+    /**
+     * @method
+     * Returns the point onto the line which has the 'percentage' position onto the line.
+     *
+     * @param {Number} percentage value between [0..1]
+     * @returns {*}
+     */
+    lerp: function(percentage)
+    {
+        var p1=this.getStartPosition();
+        var p2=this.getEndPosition();
+        percentage = Math.min(1,Math.max(0,percentage));
+        return new draw2d.geo.Point(p1.x+(p2.x-p1.x)*percentage,p1.y+(p2.y-p1.y)*percentage);
+    },
+
+
+    /**
     * @method
     * Return all intersection points between the given Line.
     * 
@@ -30316,7 +30412,10 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
       if(this.oldPoint!==null){
         // store the painted line segment for the "mouse selection test"
         // (required for user interaction)
-        this.lineSegments.add({start: this.oldPoint, end:p});
+        this.lineSegments.add({
+            start: this.oldPoint,
+            end:p
+        });
       }
       this.svgPathString=null;
       this.oldPoint = p;
@@ -30342,6 +30441,100 @@ draw2d.shape.basic.PolyLine = draw2d.shape.basic.Line.extend({
             this.draggedSegment =  this.hitSegment(x,y);
         }
         return result;
+    },
+
+    /**
+     * @method
+     * Returns the length of the polyline.
+     *
+     * @return {Number}
+     * @since 6.1.43
+     **/
+    getLength: function()
+    {
+        var result = 0;
+        for(var i = 0; i< this.lineSegments.getSize();i++) {
+            var segment = this.lineSegments.get(i);
+            var p1 = segment.start;
+            var p2 = segment.end;
+            result += Math.sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
+        }
+        return result;
+    },
+
+
+    /**
+     * @method
+     * Returns the projection of the point on the line.
+     *
+     * @param {Number} px the x coordinate of the test point
+     * @param {Number} py the y coordinate of the test point
+     * @return {draw2d.geo.Point}
+     **/
+    pointProjection: function( px, py)
+    {
+        var result=null,
+            projection=null,
+            p1=null,
+            p2 = null,
+            segment=null;
+        var lastDist = Number.MAX_SAFE_INTEGER;
+        var pt = new draw2d.geo.Point(px,py);
+        for(var i = 0; i< this.lineSegments.getSize();i++) {
+            segment = this.lineSegments.get(i);
+            p1 = segment.start;
+            p2 = segment.end;
+            projection= draw2d.geo.Line.pointProjection(p1.x,p1.y,p2.x,p2.y,pt.x,pt.y);
+            if(projection!==null) {
+                var dist = projection.distance(pt);
+                if (result == null || dist < lastDist) {
+                    result = projection;
+                    result.index=i;
+                    lastDist = dist;
+                }
+            }
+        }
+
+        if (result !== null) {
+            var length = 0;
+            var segment;
+            for(var i = 0; i< result.index;i++) {
+                segment = this.lineSegments.get(i);
+                length += segment.start.distance(segment.end);
+            }
+            segment = this.lineSegments.get(result.index);
+            p1 = segment.start;
+            p2 = segment.end;
+            length +=  p1.distance(p2)*draw2d.geo.Line.inverseLerp(p2.x,p2.y,p1.x,p1.y,result.x,result.y);
+            result.percentage=(1.0/this.getLength())*length;
+        }
+        return result;
+    },
+
+    /**
+     * @method
+     * Returns the point onto the line which has the relative 'percentage' position onto the line.
+     *
+     * @param {Number} percentage the relative position between [0..1]
+     * @returns {draw2d.geo.Point}
+     */
+    lerp: function(percentage)
+    {
+        var length = this.getLength()*percentage;
+        var lastValidLength=length;
+        var segment=null,p1=null,p2=null;
+        for(var i = 0; i< this.lineSegments.getSize();i++) {
+            segment = this.lineSegments.get(i);
+            p1 = segment.start;
+            p2 = segment.end;
+            length = length-p1.distance(p2);
+            if(length<=0){
+                percentage = 1.0/p1.distance(p2)*lastValidLength;
+                return new draw2d.geo.Point(p1.x+(p2.x-p1.x)*percentage,p1.y+(p2.y-p1.y)*percentage)
+            }
+            lastValidLength=length;
+        }
+        return p2;
     },
 
     /**
