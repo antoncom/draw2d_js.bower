@@ -18428,8 +18428,15 @@ draw2d.policy.figure.AntSelectionFeedbackPolicy = draw2d.policy.figure.Selection
                 var d2= center.distance(p1);
                 projection=d1<d2?p1:p2;
             }
-            line.setStartPosition(figure.getBoundingBox().intersectionWithLine(center, projection).get(0))
-                .setEndPosition(projection);
+            var intersection =figure.getBoundingBox().intersectionWithLine(center, projection);
+            if(intersection.getSize()>0) {
+                line.setStartPosition(figure.getBoundingBox().intersectionWithLine(center, projection).get(0))
+                    .setEndPosition(projection);
+            }
+            else{
+                line.setStartPosition(figure.getBoundingBox().getCenter())
+                    .setEndPosition(projection);
+            }
         }
         else {
             var rect1 = figure.getBoundingBox(),
@@ -19801,7 +19808,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.45",
+    version : "6.1.46",
     i18n : {
         command : {
             move : "Move Shape",
