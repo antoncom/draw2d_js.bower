@@ -18364,8 +18364,8 @@ draw2d.policy.figure.AntSelectionFeedbackPolicy = draw2d.policy.figure.Selection
             // of the parent and the figure didn't have intersections
             if(figure.getParent()!==null){
                 var line = new draw2d.shape.basic.Line({opacity:0.5, bgColor:null, dasharray:"- ", color:"#2C70FF"});
-                line.setStartPoint(figure.getBoundingBox().getCenter());
-                line.setEndPoint(figure.getParent().getBoundingBox().getCenter());
+                //line.setStartPosition(figure.getBoundingBox().getCenter());
+                //line.setEndPosition(figure.getParent().getBoundingBox().getCenter());
                 line.show= function(canvas) {
                     line.setCanvas(canvas);
                 };
@@ -18374,7 +18374,7 @@ draw2d.policy.figure.AntSelectionFeedbackPolicy = draw2d.policy.figure.Selection
                 };
                 line.show(canvas);
                 figure.selectionHandles.add(line);
-
+                this._updateBeeLine(line, figure);
             }
         }
         this.moved(canvas, figure);
@@ -18401,41 +18401,60 @@ draw2d.policy.figure.AntSelectionFeedbackPolicy = draw2d.policy.figure.Selection
 
         if(figure.selectionHandles.getSize()>1){
             var line = figure.selectionHandles.get(1);
-            this._updateBeeLine(
-                line,
-                figure.getBoundingBox(),
-                figure.getParent().getBoundingBox());
+            this._updateBeeLine( line, figure);
         }
     },
 
     /**
      *
      * @param {draw2d.shape.basic.Line} line
-     * @param {draw2d.geo.Rectangle} rect1
-     * @param {draw2d.geo.Rectangle} rect2
+     * @param {draw2d.Figure} figure
      * @private
      */
-    _updateBeeLine: function(line, rect1, rect2){
+    _updateBeeLine: function(line, figure){
+        var parent = figure.getParent();
 
-        var center1 = rect1.getCenter();
-        var center2 = rect2.getCenter();
-        // the rectangle overlaps -> return the center of booth
-        if(rect1.intersects(rect2)){
-            line.setStartPoint(center1)
-                .setEndPoint(center2);
+        if(parent===null){
+            return;
         }
-        // one rect is inside the other rect
-        //
-        else if(rect1.hitTest(center2) || rect2.hitTest(center1)){
-            line.setStartPoint(center1)
-                .setEndPoint(center2);
+
+        if(parent instanceof draw2d.shape.basic.Line){
+            var center =figure.getBoundingBox().getCenter();
+            var projection= parent.pointProjection(center);
+            if(projection===null){
+                var p1= line.getStartPosition();
+                var p2= line.getEndPosition();
+                var d1= center.distance(p1);
+                var d2= center.distance(p1);
+                projection=d1<d2?p1:p2;
+            }
+            line.setStartPosition(figure.getBoundingBox().intersectionWithLine(center, projection).get(0))
+                .setEndPosition(projection);
         }
         else {
-            rect1.scale(3,3);
-            rect2.scale(3,3);
+            var rect1 = figure.getBoundingBox(),
+                rect2 = parent.getBoundingBox();
 
-            line.setStartPoint( rect1.intersectionWithLine(center1, center2).get(0))
-                .setEndPoint( rect2.intersectionWithLine(center1, center2).get(0));
+            var center1 = rect1.getCenter();
+            var center2 = rect2.getCenter();
+            // the rectangle overlaps -> return the center of booth
+            if (rect1.intersects(rect2)) {
+                line.setStartPosition(center1)
+                    .setEndPosition(center2);
+            }
+            // one rect is inside the other rect
+            //
+            else if (rect1.hitTest(center2) || rect2.hitTest(center1)) {
+                line.setStartPosition(center1)
+                    .setEndPosition(center2);
+            }
+            else {
+                rect1.scale(3, 3);
+                rect2.scale(3, 3);
+
+                line.setStartPosition(rect1.intersectionWithLine(center1, center2).get(0))
+                    .setEndPosition(rect2.intersectionWithLine(center1, center2).get(0));
+            }
         }
     }
 }); 
@@ -19782,7 +19801,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.44",
+    version : "6.1.45",
     i18n : {
         command : {
             move : "Move Shape",
@@ -27891,9 +27910,9 @@ draw2d.shape.basic.Label= draw2d.SetFigure.extend({
             
 
         this.installEditPolicy(new draw2d.policy.figure.AntSelectionFeedbackPolicy());
- 
+
     
-        // some performance approvements
+        // some performance improvements
         this.lastAppliedLabelRotation = "";
         this.lastAppliedTextAttributes= {};
     },
@@ -29364,8 +29383,8 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
     *        startY: y
     *      });
     *      
-    * @param {Number} x the x coordinate of the start point
-    * @param {Number} y the y coordinate of the start point
+    * @param {Number|draw2d.geo.Point} x the x coordinate of the start point
+    * @param {Number} [y] the y coordinate of the start point
     **/
    setStartPosition: function( x, y)
    {
