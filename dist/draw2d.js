@@ -5296,7 +5296,14 @@ draw2d.command.CommandDelete = draw2d.command.Command.extend({
    //    if(this.figure instanceof draw2d.Connection){
    //        this.figure.disconnect();
    //    }
-    
+
+
+       // remove all connections
+       //
+       for (var i = 0; i < this.connections.getSize(); ++i){
+           this.canvas.remove(this.connections.get(i));
+       }
+
        // remove this figure from the parent 
        //
        if(this.parent!==null){
@@ -5307,10 +5314,6 @@ draw2d.command.CommandDelete = draw2d.command.Command.extend({
        // or from the canvas
        else{
            this.canvas.remove(this.figure);
-       }
-    
-       for (var i = 0; i < this.connections.getSize(); ++i){
-          this.canvas.remove(this.connections.get(i));
        }
     }
 });
@@ -19808,7 +19811,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.46",
+    version : "6.1.47",
     i18n : {
         command : {
             move : "Move Shape",
@@ -22989,12 +22992,7 @@ draw2d.Figure = Class.extend({
              }
          }
          else{
-             // the canvas of the figure can be NULL if we delete objects in complex zenario
-             // e.g. A shape with a lot of Ports and Connections are deleted. In this case it can
-             // happen that a connect fires an event that he want draw in front of an (already deleted) port
-             if(figure.getCanvas()!==null) {
-                 this.getShapeElement().insertAfter(figure.getTopLevelShapeElement());
-             }
+             this.getShapeElement().insertAfter(figure.getTopLevelShapeElement());
              
              if(this.canvas!==null){
                  var figures = this.canvas.getFigures();
@@ -23048,12 +23046,7 @@ draw2d.Figure = Class.extend({
                  lines.insertElementAt(this,0);
              }
              if(typeof figure !=="undefined"){
-                 // the canvas of the figure can be NULL if we delete objects in complex zenario
-                 // e.g. A shape with a lot of Ports and Connections are deleted. In this case it can
-                 // happen that a connect fires an event that he want draw in front of an (already deleted) port
-                 if(figure.getCanvas()!==null) {
-                     this.getShapeElement().insertBefore(figure.getShapeElement());
-                 }
+                 this.getShapeElement().insertBefore(figure.getShapeElement());
              }
              else{
                  this.getShapeElement().toBack();
