@@ -26138,10 +26138,13 @@ draw2d.shape.basic.Rectangle = draw2d.VectorFigure.extend({
            $.extend({bgColor:"#a0a0a0", color:"#1B1B1B"},attr),
            $.extend({},{
                /** @attr {String} dash The dot/dash pattern for the line style. Valid values: ["", "-", ".", "-.", "-..", ". ", "- ", "--", "- .", "--.", "--.."]*/
-               dash  : this.setDashArray
+               dash  : this.setDashArray,
+               /** @attr {String} dasharray The dot/dash pattern for the line style. Valid values: ["", "-", ".", "-.", "-..", ". ", "- ", "--", "- .", "--.", "--.."]*/
+               dasharray  : this.setDashArray
            }, setter),
            $.extend({},{
-               dash  : this.getDashArray
+               dash  : this.getDashArray,
+               dasharray  : this.getDashArray
            }, getter)
 
        );
@@ -29075,7 +29078,7 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
     * 
     *      // Alternatively you can use the attr method:
     *      figure.attr({
-    *        dash: dashPattern
+    *        dasharray: dashPattern
     *      });
     *      
     * @param dash can be one of this ["", "-", ".", "-.", "-..", ". ", "- ", "--", "- .", "--.", "--.."]
@@ -29095,7 +29098,7 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
     * Get the line style for this object.
     * 
     *      // Alternatively you can use the attr method:
-    *      figure.attr("dash");
+    *      figure.attr("dasharray");
     *  
     * @since 5.1.0
     */
@@ -29169,8 +29172,7 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
            draw2d.util.JSON.ensureDefault(attributes,"stroke-width" ,this.stroke);
        }
 
-       draw2d.util.JSON.ensureDefault(attributes,"dasharray" ,this.dasharray);
-       
+       draw2d.util.JSON.ensureDefault(attributes,"stroke-dasharray" ,this.dasharray);
        this._super(attributes);
 
        if(this.outlineStroke>0){
