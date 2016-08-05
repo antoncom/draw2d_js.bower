@@ -19811,7 +19811,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.50",
+    version : "6.1.51",
     i18n : {
         command : {
             move : "Move Shape",
@@ -24794,8 +24794,6 @@ draw2d.Figure = Class.extend({
      *   <li>hide</li>
      *   <li>added</li>
      *   <li>removed</li>
-     *   <li>zooming</li>
-     *   <li>zoomed</li>
      *   <li>change:[attr]</li>
      * </ul>
      * 
