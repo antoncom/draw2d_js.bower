@@ -11334,7 +11334,8 @@ draw2d.policy.canvas.ZoomPolicy = draw2d.policy.canvas.CanvasPolicy.extend({
     /**
      * @constructor 
      */
-    init: function(){
+    init: function()
+    {
         this._super();
     },
 
@@ -11361,7 +11362,8 @@ draw2d.policy.canvas.ZoomPolicy = draw2d.policy.canvas.CanvasPolicy.extend({
     * @param {Number} zoomFactor new zoom factor.
     * @param {Boolean} [animated] set it to true for smooth zoom in/out
     **/
-    setZoom: function( zoomFactor, animated){
+    setZoom: function( zoomFactor, animated)
+    {
         var canvas = this.canvas;
 
         var _zoom = function(z){
@@ -11552,19 +11554,17 @@ draw2d.policy.canvas.WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend({
      _zoom: function(zoom, center){
          var canvas = this.canvas;
 
-         //
-         // Beachten!!:
-         //   Der Zoomfaktor in raphael ist das Verhältnis von Canvas Größe zur ViewBox Größe.
-         //   Vergrößert man das Canvas mit "zoomFactor" und die viewBox gleichzeitig mit
-         //   mit "zoomFactor", so hat man ein tatsächlichen Zoomfaktor von "zoomFactor*zoomFactor"
-         //   eingestellt, da sich canvas UND viewBox entgegengesetzt verändert haben.
-         //
-         //
-         canvas.__wheelZoom= Math.sqrt(zoom);
          canvas.zoomFactor=zoom;
 
-         canvas.paper.setViewBox(0, 0, canvas.initialWidth*canvas.__wheelZoom, canvas.initialHeight*canvas.__wheelZoom);
-         canvas.paper.setSize(canvas.initialWidth/canvas.__wheelZoom, canvas.initialHeight/canvas.__wheelZoom);
+         canvas.paper.setViewBox(0, 0, canvas.initialWidth, canvas.initialHeight);
+         // Change the width and the height attributes manually through DOM
+         // unfortunately the raphaelJS 'setSize' method changes the viewBox as well and this is unwanted in this case
+         //
+         $(canvas.html)
+             .find("svg")
+             .attr({'width': canvas.initialWidth/zoom,
+                   'height': canvas.initialHeight/zoom});
+
 
          // try to keep the document position to the given client position
          //
@@ -17274,7 +17274,7 @@ draw2d.policy.figure.DragDropEditPolicy = draw2d.policy.figure.FigureEditPolicy.
 /**
  * @class draw2d.policy.figure.RegionConstraintPolicy
  * 
- * An EditPolicy for use with Figures. The constraint for RegionContraintPolicy is a Rectangle. It is
+ * An EditPolicy for use with Figures. The constraint for RegionEditPolicy is a Rectangle. It is
  * not possible to move the related figure outside this constrained area.
  * 
  * 
@@ -17304,7 +17304,7 @@ draw2d.policy.figure.RegionEditPolicy = draw2d.policy.figure.DragDropEditPolicy.
             this.constRect = new draw2d.geo.Rectangle(x,y,w,h);
         }
         else{
-            throw "Invalid parameter. RegionConstraintPolicy need a rectangle as parameter in the constructor";
+            throw "Invalid parameter. RegionEditPolicy need a rectangle as parameter in the constructor";
         }
     },
 
@@ -19811,7 +19811,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.48",
+    version : "6.1.49",
     i18n : {
         command : {
             move : "Move Shape",
@@ -20271,10 +20271,10 @@ draw2d.Canvas = Class.extend(
         }
         
         // avoid the "highlighting" in iPad, iPhone if the user tab/touch on the canvas.
-        // .... I don't like this.
+        // .... I didn't like this.
         this.html.css({"-webkit-tap-highlight-color": "rgba(0,0,0,0)"});
         
-        // Drag&Drop Handling from foreign DIV into the Canvas
+        // Drag&Drop handling from foreign DIV into the Canvas
         // Only available in combination with jQuery-UI
         //
         // Create the droppable area for the css class "draw2d_droppable"
@@ -20334,8 +20334,12 @@ draw2d.Canvas = Class.extend(
         this.selection  = new draw2d.Selection();
         this.currentDropTarget = null;
         this.currentHoverFigure = null;
-        
-        // eventhandling since version 5.0.0
+
+        // installed to all added figures to avoid that a figure can be placed outside the canvas area
+        // during a drag&drop operation
+        this.regionDragDropConstraint =  new draw2d.policy.figure.RegionEditPolicy(0,0,this.getWidth(), this.getHeight());
+
+        // event handling since version 5.0.0
         this.eventSubscriptions = {};
         
         this.editPolicy = new draw2d.util.ArrayList();
@@ -20914,13 +20918,15 @@ draw2d.Canvas = Class.extend(
      * 
      * @returns {draw2d.geo.Point} The coordinate in relation to the canvas [0,0] position
      */
-    fromDocumentToCanvasCoordinate: function(x, y) {
+    fromDocumentToCanvasCoordinate: function(x, y)
+    {
         return new draw2d.geo.Point(
                 (x - this.getAbsoluteX() + this.getScrollLeft())*this.zoomFactor,
                 (y - this.getAbsoluteY() + this.getScrollTop())*this.zoomFactor);
     },
   
-    _fromDocumentToCanvasCoordinate_IE8_HACK: function(x, y) {
+    _fromDocumentToCanvasCoordinate_IE8_HACK: function(x, y)
+    {
         return new draw2d.geo.Point(
                 (x - this.getAbsoluteX())*this.zoomFactor,
                 (y - this.getAbsoluteY())*this.zoomFactor);
@@ -21157,6 +21163,9 @@ draw2d.Canvas = Class.extend(
          }
         }
         figure.setCanvas(this);
+
+        // to avoid drag&drop outside of this canvas
+        figure.installEditPolicy(this.regionDragDropConstraint);
 
         // important inital call
         figure.getShapeElement();
