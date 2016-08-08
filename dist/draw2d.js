@@ -11554,6 +11554,10 @@ draw2d.policy.canvas.WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend({
      _zoom: function(zoom, center){
          var canvas = this.canvas;
 
+         if(zoom === canvas.zoomFactor){
+            return;
+         }
+
          canvas.zoomFactor=zoom;
 
          canvas.paper.setViewBox(0, 0, canvas.initialWidth, canvas.initialHeight);
@@ -19811,7 +19815,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.52",
+    version : "6.1.53",
     i18n : {
         command : {
             move : "Move Shape",
