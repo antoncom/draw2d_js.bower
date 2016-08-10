@@ -19815,7 +19815,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.54",
+    version : "6.1.55",
     i18n : {
         command : {
             move : "Move Shape",
@@ -22466,13 +22466,14 @@ draw2d.Figure = Class.extend({
                     if(key.substring(0,9)==="userData."){
                         if(this.userData===null){this.userData={};}
                         draw2d.util.JSON.set({userData:this.userData}, key, name[key]);
+                        this.fireEvent("change:"+key,{value:name[key]});
                     }
                     else{
                         var func=this.setterWhitelist[key];
                         if(func){
                             func.call(this,name[key]); 
                         }
-                        // maby the ussser adds a function as property to the attr call
+                        // maybe the user adds a function as property to the attr call
                         // e.g.:
                         // {
                         //     doIt: function(){}
@@ -22512,6 +22513,7 @@ draw2d.Figure = Class.extend({
                 if(name.substring(0,9)==="userData."){
                     if(this.userData===null){this.userData={};}
                     draw2d.util.JSON.set({userData:this.userData}, name, value);
+                    this.fireEvent("change:"+name,{value:value});
                 }
                 else{
                     var setter = this.setterWhitelist[name];
