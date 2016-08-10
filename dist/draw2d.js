@@ -19815,7 +19815,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Library is under GPL License (GPL)
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/draw2d.Configuration = {
-    version : "6.1.53",
+    version : "6.1.54",
     i18n : {
         command : {
             move : "Move Shape",
@@ -20247,19 +20247,7 @@ draw2d.Canvas = Class.extend(
     init: function(canvasId, width, height)
     {
         var _this = this;
-        // Hook the canvas calculation for IE8
-        //
-        if (navigator.appName == 'Microsoft Internet Explorer')
-        {
-          var ua = navigator.userAgent;
-          var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
-          if (re.exec(ua) != null){
-            var rv = parseInt( RegExp.$1 );
-            if(rv===8){
-                this.fromDocumentToCanvasCoordinate = this._fromDocumentToCanvasCoordinate_IE8_HACK;
-            }
-          }
-        }
+
 
         this.setScrollArea(document.body);
         this.canvasId = canvasId;
@@ -20929,13 +20917,6 @@ draw2d.Canvas = Class.extend(
                 (y - this.getAbsoluteY() + this.getScrollTop())*this.zoomFactor);
     },
   
-    _fromDocumentToCanvasCoordinate_IE8_HACK: function(x, y)
-    {
-        return new draw2d.geo.Point(
-                (x - this.getAbsoluteX())*this.zoomFactor,
-                (y - this.getAbsoluteY())*this.zoomFactor);
-    },
-
     /**
      * @method
      * Transforms a canvas coordinate to document coordinate.
@@ -22432,16 +22413,16 @@ draw2d.Figure = Class.extend({
      * 
      *     // setting multiple attributes:
      *     figure.attr({
-     *       userData.my.property.x: 30,
-     *       userData.my.property.y: 40
+     *       "userData.my.property.x": 30,
+     *       "userData.my.property.y": 40
      *     });
      * 
      * Also set using array notation is possible for the userData:
      * 
      *     // dot notation and array brackets:
      *     figure.attr({
-     *       userData.my.names[0]: "John",
-     *       userData.my.names[1]: "Doe"
+     *       "userData.my.names[0]": "John",
+     *       "userData.my.names[1]": "Doe"
      *     });
      *     
      *     
@@ -22483,6 +22464,7 @@ draw2d.Figure = Class.extend({
                     // index/brackets are allowed too.
                     //
                     if(key.substring(0,9)==="userData."){
+                        if(this.userData===null){this.userData={};}
                         draw2d.util.JSON.set({userData:this.userData}, key, name[key]);
                     }
                     else{
@@ -22528,6 +22510,7 @@ draw2d.Figure = Class.extend({
                     value = value();
                 }
                 if(name.substring(0,9)==="userData."){
+                    if(this.userData===null){this.userData={};}
                     draw2d.util.JSON.set({userData:this.userData}, name, value);
                 }
                 else{
