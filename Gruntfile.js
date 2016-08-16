@@ -3,11 +3,11 @@ module.exports = function (grunt) {
     grunt.initConfig({
         bump: {
             options: {
-                files: ['package.json'],
+                files: ['package.json', "bower.json"],
                 updateConfigs: [],
                 commit: true,
                 commitMessage: 'Release v%VERSION%',
-                commitFiles: ['package.json', "dist/*.js"],
+                commitFiles: ['package.json', 'bower.json', "dist/*.js"],
                 createTag: true,
                 tagName: 'v%VERSION%',
                 tagMessage: 'Version %VERSION%',
