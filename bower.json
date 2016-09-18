@@ -1,6 +1,6 @@
 {
   "name": "draw2d",
-  "version": "6.1.59",
+  "version": "6.1.60",
   "main": [
     "dist/jquery.autoresize.js",
     "dist/jquery-touch_punch.js",
