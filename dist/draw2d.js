@@ -20129,7 +20129,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/
 draw2d.Configuration = {
-    version : "6.1.61",
+    version : "6.1.64",
     i18n : {
         command : {
             move : "Move Shape",
