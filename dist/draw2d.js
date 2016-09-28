@@ -20129,7 +20129,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/
 draw2d.Configuration = {
-    version : "6.1.64",
+    version : "6.1.65",
     i18n : {
         command : {
             move : "Move Shape",
@@ -51741,18 +51741,18 @@ draw2d.io.Writer = Class.extend({
      */
     formatXml: function(xml) {
         var formatted = '';
-        var reg = /(>)(<)(\/*)/g;
+        var reg = new RegExp("(>)(<)(\/*)","g");
         xml = xml.replace(reg, '$1\r\n$2$3');
         var pad = 0;
         jQuery.each(xml.split('\r\n'), function(index, node) {
             var indent = 0;
-            if (node.match( /.+<\/\w[^>]*>$/ )) {
+            if (node.match( new RegExp(".+<\/\w[^>]*>$") )) {
                 indent = 0;
-            } else if (node.match( /^<\/\w/ )) {
+            } else if (node.match( new RegExp("^<\/\w") )) {
                 if (pad != 0) {
                     pad -= 1;
                 }
-            } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
+            } else if (node.match( new RegExp("^<\w[^>]*[^\/]>.*$") )) {
                 indent = 1;
             } else {
                 indent = 0;
