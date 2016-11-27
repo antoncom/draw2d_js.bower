@@ -4522,7 +4522,16 @@ draw2d.policy.canvas.DefaultKeyboardPolicy = draw2d.policy.canvas.KeyboardPolicy
     {
         if(keyCode===46 && canvas.getPrimarySelection()!==null){
             canvas.getCommandStack().startTransaction(draw2d.Configuration.i18n.command.deleteShape);
-            canvas.getSelection().each(function(index, figure){
+            var selection = canvas.getSelection();
+            selection.each(function(index, figure){
+               if(figure instanceof draw2d.Connection){
+                    if(selection.contains(figure.getSource(),true)) {
+                        return;
+                    }
+                    if(selection.contains(figure.getTarget(),true)) {
+                       return;
+                    }
+               }
                var cmd = figure.createCommand(new draw2d.command.CommandType(draw2d.command.CommandType.DELETE));
                if(cmd!==null){
                    canvas.getCommandStack().execute(cmd);
@@ -4612,13 +4621,16 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
     {
         this.mouseMovedDuringMouseDown  = false;
         var canDragStart = true;
-        var figure = canvas.getBestFigure(x, y, draw2d.Port);
+        var figure = canvas.getBestFigure(x, y);
         while(figure!==null){
             var delegate = figure.getSelectionAdapter()();
             if(delegate===figure){
                 break;
             }
             figure = delegate;
+        }
+        if (figure instanceof draw2d.Port) {
+            return;
         }
         if (figure !== null && figure.isDraggable()) {
             canDragStart = figure.onDragStart(x - figure.getAbsoluteX(), y - figure.getAbsoluteY(), shiftKey, ctrlKey);
@@ -7259,8 +7271,8 @@ draw2d.policy.figure.VerticalEditPolicy = draw2d.policy.figure.DragDropEditPolic
         return new draw2d.geo.Point(figure.getX(),y);
     }
 });
-draw2d.policy.figure.SelectionFeedbackPolicy = draw2d.policy.figure.DragDropEditPolicy.extend({
-    NAME : "draw2d.policy.figure.SelectionFeedbackPolicy",
+draw2d.policy.figure.SelectionPolicy = draw2d.policy.figure.DragDropEditPolicy.extend({
+    NAME : "draw2d.policy.figure.SelectionPolicy",
     init: function( attr, setter, getter)
     {
         this._super( attr, setter, getter);
@@ -7270,6 +7282,21 @@ draw2d.policy.figure.SelectionFeedbackPolicy = draw2d.policy.figure.DragDropEdit
     },
     onUnselect: function(canvas, figure )
     {
+    }
+});
+draw2d.policy.figure.SelectionFeedbackPolicy = draw2d.policy.figure.SelectionPolicy.extend({
+    NAME : "draw2d.policy.figure.SelectionFeedbackPolicy",
+    init: function( attr, setter, getter)
+    {
+        this._super( attr, setter, getter);
+    },
+    onSelect: function(canvas, figure, isPrimarySelection)
+    {
+        this._super(canvas, figure,isPrimarySelection);
+    },
+    onUnselect: function(canvas, figure )
+    {
+        this._super(canvas, figure);
         figure.selectionHandles.each(function(i,e){
             e.hide();
         });
@@ -8200,7 +8227,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
     }
 });
 draw2d.Configuration = {
-    version : "6.1.65",
+    version : "6.1.66",
     i18n : {
         command : {
             move : "Move Shape",
@@ -8779,11 +8806,13 @@ draw2d.Canvas = Class.extend(
             return this;
         }
         var _this = this;
-        this.editPolicy.each(function(i,policy){
-            if(typeof policy.unselect==="function"){
-                policy.unselect(_this,figure);
-            }
-        });
+        if(this.getSelection().contains(figure)) {
+            this.editPolicy.each(function (i, policy) {
+                if (typeof policy.unselect === "function") {
+                    policy.unselect(_this, figure);
+                }
+            });
+        }
         if(figure instanceof draw2d.shape.basic.Line){
            this.lines.remove(figure);
         }
@@ -9281,7 +9310,6 @@ draw2d.Figure = Class.extend({
         this.height = this.getMinHeight();
         this.alpha = 1.0;
         this.isInDragDrop =false;
-        var _this = this;
         this.ox = 0;
         this.oy = 0;
         this.repaintBlocked=false;
@@ -9305,7 +9333,7 @@ draw2d.Figure = Class.extend({
         var orig = this.repaintBlocked;
         try{
             if($.isPlainObject(name)){
-                for(key in name){
+                for(var key in name){
                     if(key.substring(0,9)==="userData."){
                         if(this.userData===null){this.userData={};}
                         draw2d.util.JSON.set({userData:this.userData}, key, name[key]);
@@ -9382,7 +9410,7 @@ draw2d.Figure = Class.extend({
         }
         var _this=this;
         this.editPolicy.each(function(i,e){
-              if(e instanceof draw2d.policy.figure.SelectionFeedbackPolicy){
+              if(e instanceof draw2d.policy.figure.SelectionPolicy){
                   e.onSelect(_this.canvas, _this,asPrimarySelection);
               }
         });
@@ -9395,7 +9423,7 @@ draw2d.Figure = Class.extend({
     {
         var _this = this;
         this.editPolicy.each(function(i,e){
-              if(e instanceof draw2d.policy.figure.SelectionFeedbackPolicy){
+              if(e instanceof draw2d.policy.figure.SelectionPolicy){
                   e.onUnselect(_this.canvas, _this);
               }
         });
@@ -9418,7 +9446,8 @@ draw2d.Figure = Class.extend({
     {
         return this.selectionAdapter;
     },
-    isSelected: function(){
+    isSelected: function()
+    {
         if(this.canvas !==null){
             return this.canvas.getSelection().contains(this);
         }
@@ -9462,7 +9491,8 @@ draw2d.Figure = Class.extend({
         this.fireEvent("change:cssClass",{value:this.cssClass});
         return this;
     },
-    hasCssClass: function(className) {
+    hasCssClass: function(className)
+    {
         if(this.cssClass===null){
             return false;
         }
@@ -9514,9 +9544,11 @@ draw2d.Figure = Class.extend({
     {
       if(canvas===null && this.shape!==null)
       {
-         this.unselect();
-         this.shape.remove();
-         this.shape=null;
+          if(this.isSelected()) {
+              this.unselect();
+          }
+          this.shape.remove();
+          this.shape=null;
       }
       this.canvas = canvas;
       if(this.canvas!==null){
@@ -9750,11 +9782,11 @@ draw2d.Figure = Class.extend({
          if (this.repaintBlocked===true || this.shape === null){
              return this;
          }
+         var _this = this;
          attributes = attributes || {};
          if(this.visible===true){
              if(this.shape.isVisible()===false){
                  if($.isNumeric(attributes.visibleDuration)){
-                     var _this = this;
                      $(this.shape.node).fadeIn(attributes.visibleDuration, function(){
                          _this.shape.show();
                      });
@@ -9767,7 +9799,6 @@ draw2d.Figure = Class.extend({
          else{
              if(this.shape.isVisible()===true){
                  if($.isNumeric(attributes.visibleDuration)){
-                     var _this = this;
                      $(this.shape.node).fadeOut(attributes.visibleDuration, function(){
                          _this.shape.hide();
                      });
@@ -13906,12 +13937,12 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
     {
         return this.isDraggable();
     },
-    add: function(child, locator)
+    add: function(child, locator, index)
     {
         if(!(locator instanceof draw2d.layout.locator.ConnectionLocator)){
            throw "Locator must implement the class draw2d.layout.locator.ConnectionLocator"; 
         }
-        this._super(child, locator);
+        this._super(child, locator, index);
     },
     setSourceDecorator: function( decorator)
     {
@@ -14279,7 +14310,7 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
                   node:parentNode.getId(),
                   port: this.getSource().getName()
                 };
-        var parentNode = this.getTarget().getParent();
+        parentNode = this.getTarget().getParent();
         while(parentNode.getParent()!==null){
         	parentNode = parentNode.getParent();
         }
@@ -15336,7 +15367,7 @@ draw2d.Port = draw2d.shape.basic.Circle.extend({
          });
          return canStartDrag;
     },
-    onDrag: function(dx, dy, dx2, dy2)
+    onDrag: function(dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
         this._super( dx, dy);
     },
@@ -15888,18 +15919,18 @@ draw2d.shape.layout.TableLayout= draw2d.shape.layout.Layout.extend({
                 else{
                 	switch(layout.valign){
                 	case "middle":
-                		y=y+ (layout.h-height)/2;
+                		y=y+ (layout.h-(height+layout.padding.top+layout.padding.bottom))/2;
                 		break;
                 	case "bottom":
-                		y=y+ (layout.h-height);
+                		y=y+ (layout.h-(height+layout.padding.top+layout.padding.bottom));
                 		break;
                 	}
                 	switch(layout.align){
                 	case "center":
-                		x=x+ (layout.w-width)/2+(widthOffset/2);
+                		x=x+ (layout.w-(width+layout.padding.left+layout.padding.right))/2+(widthOffset/2);
                 		break;
                 	case "right":
-                		x=x+ (layout.w-width)+widthOffset;
+                		x=x+ (layout.w-(width+layout.padding.left+layout.padding.right))+widthOffset;
                 		break;
                 	}                	
                 }
@@ -16226,6 +16257,7 @@ draw2d.shape.layout.FlexGridLayout= draw2d.shape.layout.Layout.extend({
     },
     add: function(figure, cellConstraint){
         figure.__cellConstraint=  $.extend({},{row:0, col:0, rowspan:1, colspan:1, align:"left", valign:"top", width:1, height:1}, cellConstraint);
+        this.gridDef.layoutRequired=true;
         this._super(figure, this.cellLocator);
         this._layout();
     },

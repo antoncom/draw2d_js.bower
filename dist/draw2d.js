@@ -949,7 +949,7 @@ draw2d.util.Color = Class.extend({
     },
     
     /**
-     * @private
+     *
      **/
     hex: function()
     { 
@@ -11921,7 +11921,20 @@ draw2d.policy.canvas.DefaultKeyboardPolicy = draw2d.policy.canvas.KeyboardPolicy
             // This happens with command stack transactions.
             //
             canvas.getCommandStack().startTransaction(draw2d.Configuration.i18n.command.deleteShape);
-            canvas.getSelection().each(function(index, figure){
+            var selection = canvas.getSelection();
+            selection.each(function(index, figure){
+               // don't delete a connection if the source or target figure is part of the selection.
+               // In this case the connection is deleted by the DeleteCommand itself and it is not allowed to
+               // delete a figure twice.
+               //
+               if(figure instanceof draw2d.Connection){
+                    if(selection.contains(figure.getSource(),true)) {
+                        return;
+                    }
+                    if(selection.contains(figure.getTarget(),true)) {
+                       return;
+                    }
+               }
                var cmd = figure.createCommand(new draw2d.command.CommandType(draw2d.command.CommandType.DELETE));
                if(cmd!==null){
                    canvas.getCommandStack().execute(cmd);
@@ -11935,8 +11948,6 @@ draw2d.policy.canvas.DefaultKeyboardPolicy = draw2d.policy.canvas.KeyboardPolicy
          }
         
     }
-
-
 });
 
 
@@ -12148,7 +12159,7 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
 
         // ignore ports since version 6.1.0. This is handled by the ConnectionCreatePolicy
         //
-        var figure = canvas.getBestFigure(x, y, draw2d.Port);
+        var figure = canvas.getBestFigure(x, y);
 
         // may the figure is assigned to a composite. In this case the composite can
         // override the event receiver
@@ -12158,6 +12169,12 @@ draw2d.policy.canvas.SingleSelectionPolicy =  draw2d.policy.canvas.SelectionPoli
                 break;
             }
             figure = delegate;
+        }
+
+        // ignore ports since version 6.1.0. This is handled by the ConnectionCreatePolicy
+        //
+        if (figure instanceof draw2d.Port) {
+            return;// silently
         }
 
         if (figure !== null && figure.isDraggable()) {
@@ -17780,9 +17797,9 @@ draw2d.policy.figure.VerticalEditPolicy = draw2d.policy.figure.DragDropEditPolic
  * @author Andreas Herz
  * @extends draw2d.policy.figure.DragDropEditPolicy
  */
-draw2d.policy.figure.SelectionFeedbackPolicy = draw2d.policy.figure.DragDropEditPolicy.extend({
+draw2d.policy.figure.SelectionPolicy = draw2d.policy.figure.DragDropEditPolicy.extend({
 
-    NAME : "draw2d.policy.figure.SelectionFeedbackPolicy",
+    NAME : "draw2d.policy.figure.SelectionPolicy",
     
     /**
      * @constructor 
@@ -17814,6 +17831,64 @@ draw2d.policy.figure.SelectionFeedbackPolicy = draw2d.policy.figure.DragDropEdit
      */
     onUnselect: function(canvas, figure )
     {
+    }
+
+});
+
+
+/*****************************************
+ *   Library is under GPL License (GPL)
+ *   Copyright (c) 2012 Andreas Herz
+ ****************************************/
+
+/**
+ * @class draw2d.policy.figure.SelectionFeedbackPolicy
+ * 
+ * A {@link  draw2d.policy.SelectionFeedbackPolicy} that is sensitive to the canvas selection. Subclasses will typically
+ * decorate the {@link draw2d.Figure figure} with things like selection handles and/or focus feedback.
+ * <br>
+ * If you want to change the handle visibility for a figure, then you should use SelectionFeedbackPolicy to do that.
+ * 
+ * @author Andreas Herz
+ * @extends draw2d.policy.figure.DragDropEditPolicy
+ */
+draw2d.policy.figure.SelectionFeedbackPolicy = draw2d.policy.figure.SelectionPolicy.extend({
+
+    NAME : "draw2d.policy.figure.SelectionFeedbackPolicy",
+    
+    /**
+     * @constructor 
+     * 
+     */
+    init: function( attr, setter, getter)
+    {
+        this._super( attr, setter, getter);
+    },
+    
+
+
+    /**
+     * @method
+     * 
+     * @template
+     * @param figure
+     * @param isPrimarySelection
+     */
+    onSelect: function(canvas, figure, isPrimarySelection)
+    {
+        this._super(canvas, figure,isPrimarySelection);
+    },
+    
+    
+    /**
+     * @method
+     * 
+     * @param {draw2d.Figure} figure the unselected figure
+     */
+    onUnselect: function(canvas, figure )
+    {
+        this._super(canvas, figure);
+
         figure.selectionHandles.each(function(i,e){
             e.hide();
         });
@@ -20129,7 +20204,7 @@ draw2d.policy.port.IntrusivePortsFeedbackPolicy = draw2d.policy.port.PortFeedbac
  *   Copyright (c) 2012 Andreas Herz
  ****************************************/
 draw2d.Configuration = {
-    version : "6.1.65",
+    version : "6.1.66",
     i18n : {
         command : {
             move : "Move Shape",
@@ -21536,11 +21611,13 @@ draw2d.Canvas = Class.extend(
         // remove the figure from a selection handler as well and cleanup the 
         // selection feedback 
         var _this = this;
-        this.editPolicy.each(function(i,policy){
-            if(typeof policy.unselect==="function"){
-                policy.unselect(_this,figure);
-            }
-        });
+        if(this.getSelection().contains(figure)) {
+            this.editPolicy.each(function (i, policy) {
+                if (typeof policy.unselect === "function") {
+                    policy.unselect(_this, figure);
+                }
+            });
+        }
         
         if(figure instanceof draw2d.shape.basic.Line){
            this.lines.remove(figure);
@@ -21566,7 +21643,6 @@ draw2d.Canvas = Class.extend(
      * @method
      * Returns all lines/connections in this workflow/canvas.<br>
      *
-     * @protected
      * @return {draw2d.util.ArrayList}
      **/
     getLines: function()
@@ -21578,7 +21654,6 @@ draw2d.Canvas = Class.extend(
      * @method
      * Returns the internal figures.<br>
      *
-     * @protected
      * @return {draw2d.util.ArrayList}
      **/
     getFigures: function()
@@ -22647,18 +22722,6 @@ draw2d.Figure = Class.extend({
         // 
         this.isInDragDrop =false;
 
-
-        var _this = this;
-        /*
-        this.watch("isInDragDrop", function (id,oldval,newval) {
-            console.log("figure." + id + " changed from " + oldval + " to " + newval+ "    "+_this.NAME);
-            if (newval === true) {
-                console.log("new");
-            }
-            console.log(_this);
-            return newval;
-        });
-        */
         this.ox = 0;
         this.oy = 0;
         this.repaintBlocked=false;
@@ -22687,7 +22750,6 @@ draw2d.Figure = Class.extend({
 
         // the new style attr call with object attributes
         this.attr(attr);
-
     },
     
     /**
@@ -22775,12 +22837,12 @@ draw2d.Figure = Class.extend({
     attr: function(name, value){
         var _this = this;
         var orig = this.repaintBlocked;
-  //      this.repaintBlocked=true;
+
         try{
             // call of attr as setter method with {name1:val1, name2:val2 }  argument list
             //
             if($.isPlainObject(name)){
-                for(key in name){
+                for(var key in name){
                     // user can set the "userData" with path notation. In this case we
                     // expand the path to a real JSON object and set the data.
                     // index/brackets are allowed too.
@@ -22887,19 +22949,19 @@ draw2d.Figure = Class.extend({
     * @method
     * Add the figure to the current selection and propagate this to all edit policies.
     * 
-    * @param {Boolean} [isPrimarySelection] true if the element should be the primary selection
+    * @param {Boolean} [asPrimarySelection] true if the element should be the primary selection
     * @private
     */
     select: function(asPrimarySelection){
         if(typeof asPrimarySelection==="undefined"){
             asPrimarySelection=true;
         }
-     
+
         // apply all EditPolicy for select Operations
         //
         var _this=this;
         this.editPolicy.each(function(i,e){
-              if(e instanceof draw2d.policy.figure.SelectionFeedbackPolicy){
+              if(e instanceof draw2d.policy.figure.SelectionPolicy){
                   e.onSelect(_this.canvas, _this,asPrimarySelection);
               }
         });
@@ -22923,7 +22985,7 @@ draw2d.Figure = Class.extend({
         // apply all EditPolicy for select Operations
         //
         this.editPolicy.each(function(i,e){
-              if(e instanceof draw2d.policy.figure.SelectionFeedbackPolicy){
+              if(e instanceof draw2d.policy.figure.SelectionPolicy){
                   e.onUnselect(_this.canvas, _this);
               }
         });
@@ -22965,8 +23027,8 @@ draw2d.Figure = Class.extend({
      *
      * @return {Boolean}
      */
-    isSelected: function(){
-
+    isSelected: function()
+    {
         if(this.canvas !==null){
             return this.canvas.getSelection().contains(this);
         }
@@ -23087,7 +23149,8 @@ draw2d.Figure = Class.extend({
      * @param {String} className the class name to check
      * @since 2.9.0
      */
-    hasCssClass: function(className) {
+    hasCssClass: function(className)
+    {
         if(this.cssClass===null){
             return false;
         }
@@ -23179,9 +23242,11 @@ draw2d.Figure = Class.extend({
       // was already drawn
       if(canvas===null && this.shape!==null)
       {
-         this.unselect();
-         this.shape.remove();
-         this.shape=null;
+          if(this.isSelected()) {
+              this.unselect();
+          }
+          this.shape.remove();
+          this.shape=null;
       }
     
       this.canvas = canvas;
@@ -23462,7 +23527,7 @@ draw2d.Figure = Class.extend({
       *      
       *     canvas.add( start);
       *      
-      * @param {draw2d.Figure} figure the figure to add as decoration to the connection.
+      * @param {draw2d.Figure} child the figure to add as decoration to the connection.
       * @param {draw2d.layout.locator.Locator} locator the locator for the child. 
       * @param {Number} [index] optional index where to insert the figure
      **/
@@ -23637,14 +23702,13 @@ draw2d.Figure = Class.extend({
          if (this.repaintBlocked===true || this.shape === null){
              return this;
          }
-
+         var _this = this;
          attributes = attributes || {};
 
 
          if(this.visible===true){
              if(this.shape.isVisible()===false){
                  if($.isNumeric(attributes.visibleDuration)){
-                     var _this = this;
                      $(this.shape.node).fadeIn(attributes.visibleDuration, function(){
                          _this.shape.show();
                      });
@@ -23657,7 +23721,6 @@ draw2d.Figure = Class.extend({
          else{
              if(this.shape.isVisible()===true){
                  if($.isNumeric(attributes.visibleDuration)){
-                     var _this = this;
                      $(this.shape.node).fadeOut(attributes.visibleDuration, function(){
                          _this.shape.hide();
                      });
@@ -23936,7 +23999,6 @@ draw2d.Figure = Class.extend({
       }
       this.isInDragDrop = false;
       this.panningDelegate=null;
-
 
       // notify all installed policies
       //
@@ -29433,7 +29495,7 @@ draw2d.shape.basic.Line = draw2d.Figure.extend({
     *        dasharray: dashPattern
     *      });
     *      
-    * @param dash can be one of this ["", "-", ".", "-.", "-..", ". ", "- ", "--", "- .", "--.", "--.."]
+    * @param {String} dashPattern Can be one of this ["", "-", ".", "-.", "-..", ". ", "- ", "--", "- .", "--.", "--.."]
     */
    setDashArray: function(dashPattern)
    {
@@ -32928,10 +32990,11 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
      * operations. It's only a decorator for the connection.<br>
      * Mainly for labels or other fancy decorations :-)
      *
-     * @param {draw2d.Figure} figure the figure to add as decoration to the connection.
-     * @param {draw2d.layout.locator.ConnectionLocator} locator the locator for the child. 
+     * @param {draw2d.Figure} child the figure to add as decoration to the connection.
+     * @param {draw2d.layout.locator.ConnectionLocator} locator the locator for the child.
+     * @param {Number} [index] optional index where to insert the figure
     **/
-    add: function(child, locator)
+    add: function(child, locator, index)
     {
         // just to ensure the right interface for the locator.
         // The base class needs only 'draw2d.layout.locator.Locator'.
@@ -32939,7 +33002,7 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
            throw "Locator must implement the class draw2d.layout.locator.ConnectionLocator"; 
         }
         
-        this._super(child, locator);
+        this._super(child, locator, index);
     },
     
 
@@ -32947,7 +33010,7 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
      * @method
      * Set the ConnectionDecorator for this object.
      *
-     * @param {draw2d.decoration.connection.Decorator} the new source decorator for the connection
+     * @param {draw2d.decoration.connection.Decorator} decorator the new source decorator for the connection
      **/
     setSourceDecorator: function( decorator)
     {
@@ -32975,7 +33038,7 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
      * @method
      * Set the ConnectionDecorator for this object.
      *
-     * @param {draw2d.decoration.connection.Decorator} the new target decorator for the connection
+     * @param {draw2d.decoration.connection.Decorator} decorator the new target decorator for the connection
      **/
     setTargetDecorator: function( decorator)
     {
@@ -33584,7 +33647,7 @@ draw2d.Connection = draw2d.shape.basic.PolyLine.extend({
                   port: this.getSource().getName()
                 };
         
-        var parentNode = this.getTarget().getParent();
+        parentNode = this.getTarget().getParent();
         while(parentNode.getParent()!==null){
         	parentNode = parentNode.getParent();
         }
@@ -34294,7 +34357,7 @@ draw2d.ResizeHandle = draw2d.shape.basic.Rectangle.extend({
      * class updates the resize handles during the update of the Dimension/Position. This
      * is not neccessary for the ResizeHandles. Performance issue.
      * 
-     * @param {Number} x The new x coordinate of the figure
+     * @param {Number|draw2d.geo.Point} x The new x coordinate of the figure
      * @param {Number} y The new y coordinate of the figure
      **/
     setPosition: function(x, y) {
@@ -34313,7 +34376,7 @@ draw2d.ResizeHandle = draw2d.shape.basic.Rectangle.extend({
             return this;
         }
 
-        // performace improment by setting the coordinates direct.
+        // performance improvement by setting the coordinates direct.
         this.shape.attr({x:this.x, y:this.y});
 //        this.repaint();
     },
@@ -34384,8 +34447,6 @@ draw2d.ResizeHandle = draw2d.shape.basic.Rectangle.extend({
      * Additional bring it in to the front of other figures.
      *
      * @param {draw2d.Canvas} canvas the canvas to use
-     * @param {Number} x the x-positin
-     * @param {Number} y the y-position
      **/
     show: function(canvas)
     {
@@ -35850,8 +35911,9 @@ draw2d.Port = draw2d.shape.basic.Circle.extend({
      *
      * @private
      **/
-    onDrag: function(dx, dy, dx2, dy2)
+    onDrag: function(dx, dy, dx2, dy2, shiftKey, ctrlKey)
     {
+        // TODO: warum wurde diese methode überschrieben?!
         this._super( dx, dy);
     },
     
@@ -36031,8 +36093,6 @@ draw2d.Port = draw2d.shape.basic.Circle.extend({
      * <br>
      * DON'T fire this event if the Port is during a Drag&Drop operation. This can happen
      * if we try to connect two ports
-     * 
-     * @private
      **/
     fireEvent: function(event, args)
     {
@@ -39271,10 +39331,10 @@ draw2d.shape.layout.TableLayout= draw2d.shape.layout.Layout.extend({
                 	//
                 	switch(layout.valign){
                 	case "middle":
-                		y=y+ (layout.h-height)/2;
+                		y=y+ (layout.h-(height+layout.padding.top+layout.padding.bottom))/2;
                 		break;
                 	case "bottom":
-                		y=y+ (layout.h-height);
+                		y=y+ (layout.h-(height+layout.padding.top+layout.padding.bottom));
                 		break;
                 	}
                 	
@@ -39282,10 +39342,10 @@ draw2d.shape.layout.TableLayout= draw2d.shape.layout.Layout.extend({
                 	//
                 	switch(layout.align){
                 	case "center":
-                		x=x+ (layout.w-width)/2+(widthOffset/2);
+                		x=x+ (layout.w-(width+layout.padding.left+layout.padding.right))/2+(widthOffset/2);
                 		break;
                 	case "right":
-                		x=x+ (layout.w-width)+widthOffset;
+                		x=x+ (layout.w-(width+layout.padding.left+layout.padding.right))+widthOffset;
                 		break;
                 	}                	
                 }
@@ -39931,7 +39991,7 @@ draw2d.shape.layout.FlexGridLayout= draw2d.shape.layout.Layout.extend({
     add: function(figure, cellConstraint){
 
         figure.__cellConstraint=  $.extend({},{row:0, col:0, rowspan:1, colspan:1, align:"left", valign:"top", width:1, height:1}, cellConstraint);
-      
+        this.gridDef.layoutRequired=true;
         this._super(figure, this.cellLocator);
         this._layout();
     },
